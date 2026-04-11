@@ -22,12 +22,9 @@ public abstract class Shape : Entity
             _thickness = value;
         }
     }
-    public Point Position { get; set; }
+    public abstract BoundingBox Bounds { get; }
 
-    public Shape(Point position)
-    {
-        Position = position;
-    }
+    public abstract void Move(double dx, double dy);
 
     public abstract void Accept(IShapeVisitor visitor);
 

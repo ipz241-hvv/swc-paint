@@ -1,12 +1,11 @@
 ﻿using SWCPaint.Core.Models;
-using SWCPaint.Core.Services;
+using SWCPaint.Core.Tools;
 
 namespace SWCPaint.Core.Interfaces;
 
 public interface ITool
 {
-    public abstract void OnMouseDown(Point point, Project project, DrawingSettings settings);
-    public virtual void OnMouseMove(Point point, Project project) { }
-    public virtual void OnMouseUp(Point point, Project project) { }
+    public void OnMouseDown(Point point, ToolContext toolContext);
+    public void OnMouseMove(Point point, ToolContext toolContext);
+    public void OnMouseUp(Point point, ToolContext toolContext);
 }
-

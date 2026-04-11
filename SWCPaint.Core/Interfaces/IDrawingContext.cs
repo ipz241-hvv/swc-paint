@@ -1,3 +1,11 @@
-﻿namespace SWCPaint.Core.Interfaces;
+﻿using SWCPaint.Core.Models;
 
-public interface IDrawingContext {}
+namespace SWCPaint.Core.Interfaces;
+
+public interface IDrawingContext
+{
+    void DrawLine(Point start, Point end, Color strokeColor, double thickness);
+    void DrawRectangle(Point topLeft, double width, double height, Color strokeColor, Color? fillColor, double thickness);
+    void DrawEllipse(Point center, double radiusX, double radiusY, Color strokeColor, Color? fillColor, double thickness);
+    void DrawPath(IEnumerable<Point> points, Color strokeColor, Color? fillColor, double thickness, bool isClosed);
+}
