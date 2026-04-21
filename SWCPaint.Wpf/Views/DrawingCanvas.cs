@@ -6,6 +6,7 @@ using SWCPaint.Core.Models;
 using SWCPaint.Core.Services;
 using SWCPaint.Core.Tools;
 using SWCPaint.Infrastructure.Graphics;
+using SWCPaint.Wpf.ViewModels;
 
 namespace SWCPaint.Wpf.Views;
 
@@ -42,6 +43,15 @@ public class DrawingCanvas : FrameworkElement
         set => SetValue(ActiveToolProperty, value);
     }
 
+    private ToolContext ToolContext
+    {
+        get
+        {
+            var history = (DataContext as MainViewModel)?.History!;
+            return new ToolContext(Project, DrawingSettings.Instance, history);
+        }
+    }
+
     public DrawingCanvas()
     {
         Focusable = true;
@@ -72,9 +82,12 @@ public class DrawingCanvas : FrameworkElement
 
         var adapter = new WpfDrawingContext(drawingContext);
 
-        drawingContext.DrawRectangle(Brushes.White, null, new Rect(0, 0, Project.Width, Project.Height));
-
         Project.Render(adapter);
+
+        if (ActiveTool?.ActiveShape != null)
+        {
+            ActiveTool.ActiveShape.Draw(adapter);
+        }
     }
 
     #region Mouse Events Handling
@@ -83,13 +96,11 @@ public class DrawingCanvas : FrameworkElement
     {
         if (ActiveTool == null || Project == null) return;
 
-        var context = new ToolContext(Project, DrawingSettings.Instance);
-
         CaptureMouse();
         var position = e.GetPosition(this);
         var corePoint = new SWCPaint.Core.Models.Point(position.X, position.Y);
 
-        ActiveTool.OnMouseDown(corePoint, context);
+        ActiveTool.OnMouseDown(corePoint, ToolContext);
 
         InvalidateVisual();
     }
@@ -98,11 +109,10 @@ public class DrawingCanvas : FrameworkElement
     {
         if (!IsMouseCaptured || ActiveTool == null || Project == null) return;
 
-        var context = new ToolContext(Project, DrawingSettings.Instance);
         var position = e.GetPosition(this);
         var corePoint = new SWCPaint.Core.Models.Point(position.X, position.Y);
 
-        ActiveTool.OnMouseMove(corePoint, context);
+        ActiveTool.OnMouseMove(corePoint, ToolContext);
 
         InvalidateVisual();
     }
@@ -111,11 +121,10 @@ public class DrawingCanvas : FrameworkElement
     {
         if (!IsMouseCaptured) return;
 
-        var context = new ToolContext(Project, DrawingSettings.Instance);
         var position = e.GetPosition(this);
         var corePoint = new SWCPaint.Core.Models.Point(position.X, position.Y);
 
-        ActiveTool?.OnMouseUp(corePoint, context);
+        ActiveTool?.OnMouseUp(corePoint, ToolContext);
 
         ReleaseMouseCapture();
         InvalidateVisual();

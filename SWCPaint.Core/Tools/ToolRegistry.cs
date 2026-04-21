@@ -1,10 +1,9 @@
 ﻿using SWCPaint.Core.Interfaces;
-using SWCPaint.Core.Interfaces.Tools;
+using SWCPaint.Core.Models.Shapes;
 using SWCPaint.Core.Services;
+using SWCPaint.Core.Tools;
 
-namespace SWCPaint.Core.Tools;
-
-public class ToolRegistry : IToolRegistry
+public class ToolRegistry
 {
     private readonly Dictionary<Type, ITool> _tools = new();
     private readonly Dictionary<string, ITool> _toolsByName = new();
@@ -12,6 +11,8 @@ public class ToolRegistry : IToolRegistry
     public ToolRegistry(DrawingSettings settings)
     {
         Register(new PencilTool());
+        Register(new ShapeTool<Ellipse>());
+        Register(new ShapeTool<Rectangle>());
     }
 
     private void Register(ITool tool)
@@ -19,20 +20,22 @@ public class ToolRegistry : IToolRegistry
         var type = tool.GetType();
         _tools[type] = tool;
 
-        string name = type.Name.Replace("Tool", "");
+        string name = type.IsGenericType
+            ? type.GetGenericArguments()[0].Name
+            : type.Name.Replace("Tool", "");
+
         _toolsByName[name] = tool;
     }
 
     public T GetTool<T>() where T : class, ITool
     {
         var type = typeof(T);
-
         if (_tools.TryGetValue(type, out var tool))
         {
             return (T)tool;
         }
-        
-        throw new KeyNotFoundException($"Tool {type.Name} is not registered.");
+
+        throw new KeyNotFoundException($"Tool of type {type.Name} is not registered in the system.");
     }
 
     public ITool GetTool(string name)
@@ -41,8 +44,10 @@ public class ToolRegistry : IToolRegistry
         {
             return tool;
         }
-        throw new KeyNotFoundException($"Інструмент з назвою '{name}' не знайдено.");
+
+        var registeredNames = string.Join(", ", _toolsByName.Keys);
+        throw new KeyNotFoundException($"Інструмент '{name}' не знайдено. Доступні інструменти: {registeredNames}");
     }
 
-    public IEnumerable<ITool> GetAllTools() => _tools.Values;
+    public IEnumerable<string> GetRegisteredToolNames() => _toolsByName.Keys;
 }

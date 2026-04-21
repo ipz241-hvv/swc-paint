@@ -79,18 +79,22 @@
         </ListBox>
 
         <Border Grid.Row="2" Padding="8" Background="White" BorderThickness="0,1,0,0" BorderBrush="#DEE2E6">
-            <UniformGrid Columns="2">
+            <UniformGrid Columns="4">
                 <Button Command="{Binding AddLayerCommand}" Margin="2" Padding="5" Background="#E3F2FD" BorderBrush="#BBDEFB">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="+" FontWeight="Bold" Margin="0,0,5,0"/>
-                        <TextBlock Text="Додати"/>
                     </StackPanel>
                 </Button>
                 <Button Command="{Binding RemoveLayerCommand}" Margin="2" Padding="5" Background="#FFEBEE" BorderBrush="#FFCDD2">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="×" FontWeight="Bold" Margin="0,0,5,0"/>
-                        <TextBlock Text="Видалити"/>
                     </StackPanel>
+                </Button>
+                <Button Command="{Binding MoveLayerUpCommand}" Margin="2" Padding="5" Background="#F0F4F8">
+                    <TextBlock Text="↑" FontWeight="Bold"/>
+                </Button>
+                <Button Command="{Binding MoveLayerDownCommand}" Margin="2" Padding="5" Background="#F0F4F8">
+                    <TextBlock Text="↓" FontWeight="Bold"/>
                 </Button>
             </UniformGrid>
         </Border>

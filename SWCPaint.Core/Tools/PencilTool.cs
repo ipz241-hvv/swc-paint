@@ -1,4 +1,5 @@
-﻿using SWCPaint.Core.Interfaces;
+﻿using SWCPaint.Core.Commands;
+using SWCPaint.Core.Interfaces;
 using SWCPaint.Core.Models;
 using SWCPaint.Core.Models.Shapes;
 using SWCPaint.Core.Services;
@@ -8,6 +9,7 @@ namespace SWCPaint.Core.Tools;
 public class PencilTool : ITool
 {
     private Polyline? _currentPolyline;
+    public Shape? ActiveShape => _currentPolyline;
 
     public PencilTool() {}
 
@@ -20,8 +22,6 @@ public class PencilTool : ITool
         };
 
         _currentPolyline.Points.Add(point);
-
-        toolContext.Project.CurrentLayer.Shapes.Add(_currentPolyline);
     }
 
     public void OnMouseMove(Point point, ToolContext toolContext)
@@ -31,7 +31,17 @@ public class PencilTool : ITool
 
     public void OnMouseUp(Point point, ToolContext toolContext)
     {
-        _currentPolyline?.Points.Add(point);
+        if (_currentPolyline != null) 
+        {
+            _currentPolyline.Points.Add(point);
+
+            var command = new DrawShapeCommand(
+                toolContext.Project.CurrentLayer,
+                _currentPolyline
+            );
+            toolContext.History.Execute(command);
+        }
+        
         _currentPolyline = null;
     }
 }

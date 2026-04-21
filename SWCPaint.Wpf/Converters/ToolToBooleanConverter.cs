@@ -1,23 +1,26 @@
 ﻿using System.Globalization;
 using System.Windows.Data;
+using SWCPaint.Core.Interfaces;
 
 namespace SWCPaint.Wpf.Converters;
 
-public class ToolToBooleanConverter : IValueConverter
+public class ToolToBooleanConverter : IMultiValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value == null) return false;
+        if (values.Length < 2 || values[0] is not ITool currentTool || values[1] is not string targetName)
+            return false;
 
-        string? targetToolName = parameter?.ToString();
+        var type = currentTool.GetType();
+        string currentName = type.IsGenericType
+            ? type.GetGenericArguments()[0].Name
+            : type.Name.Replace("Tool", "");
 
-        if (string.IsNullOrEmpty(targetToolName)) return false;
-
-        return value.GetType().Name.Contains(targetToolName, StringComparison.OrdinalIgnoreCase);
+        return currentName.Equals(targetName, StringComparison.OrdinalIgnoreCase);
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
     {
-        return Binding.DoNothing;
+        throw new NotImplementedException();
     }
 }

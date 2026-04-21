@@ -12,16 +12,32 @@
     <None Remove="Assets\Icons\brush.png" />
     <None Remove="Assets\Icons\paint-icon.png" />
     <None Remove="Assets\Icons\pencil.png" />
+    <None Remove="Assets\Icons\redo.png" />
+    <None Remove="Assets\Icons\Tools\ellipse.png" />
+    <None Remove="Assets\Icons\Tools\rectangle.png" />
+    <None Remove="Assets\Icons\undo.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Assets\Icons\brush.png">
+    <Resource Include="Assets\Icons\Tools\brush.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Assets\Icons\paint-icon.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Assets\Icons\pencil.png">
+    <Resource Include="Assets\Icons\Tools\ellipse.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\Tools\pencil.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\redo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\Tools\rectangle.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\undo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

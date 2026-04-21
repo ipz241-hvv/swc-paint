@@ -1,4 +1,6 @@
-﻿namespace SWCPaint.Core.Interfaces.Tools;
+﻿using SWCPaint.Core.Models;
+
+namespace SWCPaint.Core.Interfaces.Tools;
 
 public interface IToolRegistry
 {

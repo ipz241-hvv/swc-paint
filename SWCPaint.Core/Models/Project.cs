@@ -39,6 +39,7 @@ public class Project
             _height = value;
         }
     }
+    public Color BackgroundColor { get; set; } = Color.White;
     public Guid CurrentLayerId { get; set; }
     public Layer CurrentLayer
     {
@@ -63,6 +64,15 @@ public class Project
 
     public void Render(IDrawingContext context)
     {
+        context.DrawRectangle(
+            new Point(0, 0),
+            Width,
+            Height,
+            BackgroundColor,
+            BackgroundColor,
+            0
+        );
+
         foreach (var layer in Layers)
         {
             if (!layer.IsVisible) continue;
@@ -100,6 +110,25 @@ public class Project
                 CurrentLayerId = _layers[0].Id;
             }
         }
+
+        RequestRedraw();
+    }
+
+    public void InsertLayer(int index, Layer layer)
+    {
+        _layers.Insert(index, layer);
+    }
+
+    public void MoveLayer(Guid id, int toIndex)
+    {
+        if (toIndex < 0 || toIndex >= _layers.Count) return;
+
+        var layer = _layers.Find(l => l.Id == id);
+
+        if (layer == null) return;
+
+        _layers.Remove(layer);
+        _layers.Insert(toIndex, layer);
 
         RequestRedraw();
     }

@@ -10,6 +10,13 @@
         <vm:MainViewModel />
     </Window.DataContext>
 
+    <Window.InputBindings>
+        <KeyBinding Key="Z" Modifiers="Ctrl" Command="{Binding UndoCommand}" />
+        <KeyBinding Key="Y" Modifiers="Ctrl" Command="{Binding RedoCommand}" />
+        <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SaveProjectCommand}" />
+        <KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding NewProjectCommand}" />
+    </Window.InputBindings>
+    
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Файл">
@@ -26,20 +33,60 @@
 
         <ToolBarTray DockPanel.Dock="Top">
             <ToolBar>
-                <RadioButton Style="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}"
-                             Command="{Binding SelectToolCommand}"
-                             CommandParameter="Pencil"
-                             IsChecked="{Binding CurrentTool, Converter={StaticResource ToolToBooleanConverter}, ConverterParameter=PencilTool}"
-                             ToolTip="Олівець">
-                    <Image Source="/Assets/Icons/pencil.png" Width="16" Height="16" />
-                </RadioButton>
+                <Button Command="{Binding UndoCommand}" ToolTip="Відмінити (Ctrl+Z)">
+                    <Image Source="/Assets/Icons/undo.png" Width="16" Height="16" />
+                </Button>
+                <Button Command="{Binding RedoCommand}" ToolTip="Повторити (Ctrl+Y)">
+                    <Image Source="/Assets/Icons/redo.png" Width="16" Height="16" />
+                </Button>
 
                 <Separator />
 
-                <Label Content="Колір:"/>
+                <ItemsControl ItemsSource="{Binding ToolInfos}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <RadioButton Style="{StaticResource {x:Static ToolBar.RadioButtonStyleKey}}"
+                         Command="{Binding DataContext.SelectToolCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                         CommandParameter="{Binding Name}"
+                         ToolTip="{Binding DisplayName}">
+
+                                <RadioButton.IsChecked>
+                                    <MultiBinding Converter="{StaticResource ToolToBooleanConverter}" Mode="OneWay">
+                                        <Binding Path="DataContext.CurrentTool" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                        <Binding Path="Name"/>
+                                    </MultiBinding>
+                                </RadioButton.IsChecked>
+
+                                <Image Source="{Binding IconPath}" Width="16" Height="16" />
+                            </RadioButton>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Separator />
+
+                <Label Content="Кольори (Обводка/Заливка):"/>
                 <ComboBox Width="120" 
                           ItemsSource="{Binding AvailableColors}" 
                           SelectedItem="{Binding SelectedStrokeColor}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Rectangle Width="14" Height="14" Fill="{Binding Name}" Margin="0,0,5,0" Stroke="Black" StrokeThickness="0.5"/>
+                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <ComboBox Width="120" 
+                      ItemsSource="{Binding AvailableColors}" 
+                      SelectedItem="{Binding SelectedFillColor}"> 
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
