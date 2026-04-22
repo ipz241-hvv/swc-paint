@@ -1,4 +1,4 @@
-﻿using SWCPaint.Core.Interfaces;
+﻿using SWCPaint.Core.Interfaces.Tools;
 using SWCPaint.Core.Models.Shapes;
 using SWCPaint.Core.Services;
 using SWCPaint.Core.Tools;
@@ -13,6 +13,8 @@ public class ToolRegistry
         Register(new PencilTool());
         Register(new ShapeTool<Ellipse>());
         Register(new ShapeTool<Rectangle>());
+        Register(new EraserTool());
+        Register(new LineTool());
     }
 
     private void Register(ITool tool)

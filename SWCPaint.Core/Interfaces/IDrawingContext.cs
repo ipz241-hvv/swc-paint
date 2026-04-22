@@ -8,4 +8,8 @@ public interface IDrawingContext
     void DrawRectangle(Point topLeft, double width, double height, Color strokeColor, Color? fillColor, double thickness);
     void DrawEllipse(Point center, double radiusX, double radiusY, Color strokeColor, Color? fillColor, double thickness);
     void DrawPath(IEnumerable<Point> points, Color strokeColor, Color? fillColor, double thickness, bool isClosed);
+    void PushMask(IEnumerable<EraserPath> erasers);
+    void PopMask();
+    void BeginLayer();
+    void EndLayer(IEnumerable<EraserPath> erasers);
 }

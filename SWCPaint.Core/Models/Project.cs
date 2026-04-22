@@ -1,4 +1,5 @@
 ﻿using SWCPaint.Core.Interfaces;
+using SWCPaint.Core.Models.Shapes;
 
 namespace SWCPaint.Core.Models;
 
@@ -77,10 +78,33 @@ public class Project
         {
             if (!layer.IsVisible) continue;
 
-            foreach (var shape in layer.Shapes)
+            context.BeginLayer();
+
+            for (int i = 0; i < layer.Elements.Count; i++)
             {
-                shape.Draw(context);
+                var element = layer.Elements[i];
+
+                if (element is Shape shape)
+                {
+                    var futureErasers = layer.Elements
+                        .Skip(i + 1)
+                        .OfType<EraserPath>()
+                        .ToList();
+
+                    if (futureErasers.Any())
+                    {
+                        context.PushMask(futureErasers);
+                        shape.Draw(context);
+                        context.PopMask();
+                    }
+                    else
+                    {
+                        shape.Draw(context);
+                    }
+                }
             }
+
+            context.EndLayer(Enumerable.Empty<EraserPath>());
         }
     }
 

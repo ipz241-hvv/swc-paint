@@ -1,6 +1,6 @@
 ﻿using SWCPaint.Core.Commands;
-using SWCPaint.Core.Interfaces;
 using SWCPaint.Core.Interfaces.Shapes;
+using SWCPaint.Core.Interfaces.Tools;
 using SWCPaint.Core.Models;
 using SWCPaint.Core.Models.Shapes;
 
@@ -11,7 +11,7 @@ public class ShapeTool<TShape> : ITool where TShape : BoxBoundedShape
     private TShape? _currentShape;
     private Point _startPoint;
 
-    public Shape? ActiveShape => _currentShape;
+    public LayerElement? ActiveElement => _currentShape;
 
     public void OnMouseDown(Point point, ToolContext toolContext)
     {
@@ -51,7 +51,7 @@ public class ShapeTool<TShape> : ITool where TShape : BoxBoundedShape
     {
         if (_currentShape != null && (_currentShape.Width > 1 || _currentShape.Height > 1))
         {
-            var command = new DrawShapeCommand(
+            var command = new AddElementCommand(
                 toolContext.Project.CurrentLayer,
                 _currentShape
             );

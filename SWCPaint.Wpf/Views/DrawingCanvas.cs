@@ -1,8 +1,9 @@
 ﻿using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using SWCPaint.Core.Interfaces;
+using SWCPaint.Core.Interfaces.Tools;
 using SWCPaint.Core.Models;
+using SWCPaint.Core.Models.Shapes;
 using SWCPaint.Core.Services;
 using SWCPaint.Core.Tools;
 using SWCPaint.Infrastructure.Graphics;
@@ -63,10 +64,14 @@ public class DrawingCanvas : FrameworkElement
         var canvas = (DrawingCanvas)d;
 
         if (e.OldValue is Project oldProject)
+        {
             oldProject.ProjectChanged -= canvas.OnProjectRequestRedraw;
+        }
 
         if (e.NewValue is Project newProject)
+        {
             newProject.ProjectChanged += canvas.OnProjectRequestRedraw;
+        }
 
         canvas.InvalidateVisual();
     }
@@ -80,13 +85,22 @@ public class DrawingCanvas : FrameworkElement
     {
         if (Project == null) return;
 
-        var adapter = new WpfDrawingContext(drawingContext);
+        var adapter = new WpfDrawingContext(drawingContext, Project.Width, Project.Height);
 
         Project.Render(adapter);
 
-        if (ActiveTool?.ActiveShape != null)
+        if (ActiveTool?.ActiveElement != null)
         {
-            ActiveTool.ActiveShape.Draw(adapter);
+            var element = ActiveTool.ActiveElement;
+
+            if (element is Shape shape)
+            {
+                shape.Draw(adapter);
+            }
+            else if (element is EraserPath eraser)
+            {
+                adapter.DrawPath(eraser.Points, new Core.Models.Color(128, 200, 200, 128), null, eraser.Thickness, false);
+            }
         }
     }
 

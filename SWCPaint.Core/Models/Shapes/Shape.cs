@@ -1,32 +1,22 @@
 ﻿using SWCPaint.Core.Interfaces;
-using SWCPaint.Core.Interfaces.Shapes;
 
 namespace SWCPaint.Core.Models.Shapes;
 
-public abstract class Shape : Entity
+public abstract class Shape : LayerElement
 {
-    double _thickness = 1;
+    private double _thickness = 1;
 
     public Color StrokeColor { get; set; } = new Color();
-    public double Thickness {
-        get
-        {
-            return _thickness;
-        }
+
+    public double Thickness
+    {
+        get => _thickness;
         set
         {
-            if (value < 0)
-            {
-                throw new ArgumentException("Thickness cannot be lower than 0");
-            }
+            if (value < 0) throw new ArgumentException("Thickness cannot be lower than 0");
             _thickness = value;
         }
     }
-    public abstract BoundingBox Bounds { get; }
-
-    public abstract void Move(double dx, double dy);
-
-    public abstract void Accept(IShapeVisitor visitor);
 
     public abstract void Draw(IDrawingContext context);
 

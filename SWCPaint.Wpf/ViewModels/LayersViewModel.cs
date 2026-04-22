@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows.Input;
 using SWCPaint.Core.Commands;
+using SWCPaint.Core.Interfaces;
 using SWCPaint.Core.Models;
 using SWCPaint.Wpf.Commands;
 
@@ -10,12 +11,14 @@ public class LayersViewModel : BaseViewModel
 {
     private Project _project;
     private readonly HistoryManager _history;
+    private readonly IDialogService _dialogService;
     public ObservableCollection<LayerViewModel> Layers { get; } = new();
 
-    public LayersViewModel(Project project, HistoryManager history)
+    public LayersViewModel(Project project, HistoryManager history, IDialogService dialogService)
     {
         _project = project;
         _history = history;
+        _dialogService = dialogService;
 
         SyncLayers();
 
@@ -23,11 +26,12 @@ public class LayersViewModel : BaseViewModel
 
         AddLayerCommand = new RelayCommand(_ => AddLayer());
         RemoveLayerCommand = new RelayCommand(
-            _ => RemoveLayer(),
+            p => RemoveLayer(p),
             _ => _project.Layers.Count > 1
         );
         MoveLayerUpCommand = new RelayCommand(_ => MoveLayer(-1), _ => CanMove(-1));
         MoveLayerDownCommand = new RelayCommand(_ => MoveLayer(1), _ => CanMove(1));
+        RenameLayerCommand = new RelayCommand(p => RenameLayer(p), _ => SelectedLayer != null);
     }
 
     public Project CurrentProject
@@ -56,13 +60,17 @@ public class LayersViewModel : BaseViewModel
     public ICommand RemoveLayerCommand { get; }
     public ICommand MoveLayerUpCommand { get; }
     public ICommand MoveLayerDownCommand { get; }
+    public ICommand RenameLayerCommand { get; }
 
     private void SyncLayers()
     {
         Layers.Clear();
 
-        foreach (var layer in _project.Layers)
+        for (int i = _project.Layers.Count - 1; i >= 0; i--)
+        {
+            var layer = _project.Layers[i];
             Layers.Add(new LayerViewModel(layer, () => _project.RequestRedraw()));
+        }
 
         OnPropertyChanged(nameof(SelectedLayer));
     }
@@ -75,29 +83,59 @@ public class LayersViewModel : BaseViewModel
         _history.Execute(command);
     }
 
-    private void RemoveLayer()
+    private void RemoveLayer(object? parameter = null)
     {
-        if (SelectedLayer == null || _project.Layers.Count <= 1) return;
+        Guid? idToRemove = null;
 
-        var command = new RemoveLayerCommand(_project, SelectedLayer.Id);
+        if (parameter is Guid id) idToRemove = id;
+        else if (SelectedLayer != null) idToRemove = SelectedLayer.Id;
 
+        if (idToRemove == null || _project.Layers.Count <= 1) return;
+
+        var command = new RemoveLayerCommand(_project, idToRemove.Value);
         _history.Execute(command);
     }
 
-    private bool CanMove(int direction)
+    private bool CanMove(int uiDirection)
     {
         if (SelectedLayer == null) return false;
-        int currentIndex = _project.Layers.ToList().FindIndex(l => l.Id == SelectedLayer.Id);
-        int newIndex = currentIndex + direction;
-        return newIndex >= 0 && newIndex < _project.Layers.Count;
+
+        int modelIndex = _project.Layers.ToList().FindIndex(l => l.Id == SelectedLayer.Id);
+        int modelDirection = -uiDirection;
+        int newModelIndex = modelIndex + modelDirection;
+
+        return newModelIndex >= 0 && newModelIndex < _project.Layers.Count;
     }
 
-    private void MoveLayer(int direction)
+    private void MoveLayer(int uiDirection)
     {
         if (SelectedLayer == null) return;
 
-        int currentIndex = _project.Layers.ToList().FindIndex(l => l.Id == SelectedLayer.Id);
-        var command = new MoveLayerCommand(_project, SelectedLayer.Id, currentIndex + direction);
-        _history.Execute(command);
+        int modelIndex = _project.Layers.ToList().FindIndex(l => l.Id == SelectedLayer.Id);
+
+        int modelDirection = -uiDirection;
+        int newModelIndex = modelIndex + modelDirection;
+
+        if (newModelIndex >= 0 && newModelIndex < _project.Layers.Count)
+        {
+            var command = new MoveLayerCommand(_project, SelectedLayer.Id, newModelIndex);
+            _history.Execute(command);
+        }
+    }
+
+    private void RenameLayer(object? parameter = null)
+    {
+        var target = (parameter as LayerViewModel) ?? SelectedLayer;
+
+        if (target == null) return;
+
+        var newName = _dialogService.ShowInputBox("Перейменування", "Введіть нову назву шару:", target.Name);
+
+        if (!string.IsNullOrWhiteSpace(newName) && newName != target.Name)
+        {
+            var layerModel = _project.Layers.First(l => l.Id == target.Id);
+            var command = new RenameLayerCommand(layerModel, newName, () => SyncLayers());
+            _history.Execute(command);
+        }
     }
 }

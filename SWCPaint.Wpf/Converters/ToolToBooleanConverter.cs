@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 using System.Windows.Data;
-using SWCPaint.Core.Interfaces;
+using SWCPaint.Core.Interfaces.Tools;
 
 namespace SWCPaint.Wpf.Converters;
 

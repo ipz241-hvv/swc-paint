@@ -1,29 +1,28 @@
-﻿using SWCPaint.Core.Interfaces.Shapes;
-using SWCPaint.Core.Models;
+﻿using SWCPaint.Core.Models;
 using SWCPaint.Core.Models.Shapes;
 
 namespace SWCPaint.Core.Commands;
 
-public class DrawShapeCommand : IUndoableCommand
+public class AddElementCommand : IUndoableCommand
 {
     private readonly Layer _layer;
-    private readonly Shape _shape;
+    private readonly LayerElement _element;
 
-    public string Name => "command.shape.draw";
+    public string Name => "command.element.add";
 
-    public DrawShapeCommand(Layer layer, Shape shape)
+    public AddElementCommand(Layer layer, LayerElement element)
     {
         _layer = layer;
-        _shape = shape;
+        _element = element;
     }
 
     public void Execute()
     {
-        _layer.Shapes.Add(_shape);
+        _layer.Elements.Add(_element);
     }
 
     public void Undo()
     {
-        _layer.Shapes.Remove(_shape);
+        _layer.Elements.Remove(_element);
     }
 }

@@ -9,7 +9,7 @@ public class Rectangle : BoxBoundedShape, IFillable
 
     public Rectangle(Point position, double width, double height) : base(position, width, height) { }
 
-    public override void Accept(IShapeVisitor visitor)
+    public override void Accept(IElementVisitor visitor)
     {
         visitor.Visit(this);
     }

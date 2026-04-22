@@ -14,8 +14,16 @@
     <None Remove="Assets\Icons\pencil.png" />
     <None Remove="Assets\Icons\redo.png" />
     <None Remove="Assets\Icons\Tools\ellipse.png" />
+    <None Remove="Assets\Icons\Tools\eraser.png" />
+    <None Remove="Assets\Icons\Tools\line.png" />
     <None Remove="Assets\Icons\Tools\rectangle.png" />
     <None Remove="Assets\Icons\undo.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Icons\Tools\eraser.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>
@@ -26,6 +34,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Assets\Icons\Tools\ellipse.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\Tools\line.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Assets\Icons\Tools\pencil.png">

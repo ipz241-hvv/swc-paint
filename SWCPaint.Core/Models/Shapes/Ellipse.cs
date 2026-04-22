@@ -16,7 +16,7 @@ public class Ellipse : BoxBoundedShape, IFillable
         canvasContext.DrawEllipse(Center, RadiusX, RadiusY, StrokeColor, FillColor, Thickness);
     }
 
-    public override void Accept(IShapeVisitor visitor)
+    public override void Accept(IElementVisitor visitor)
     {
         visitor.Visit(this);
     }

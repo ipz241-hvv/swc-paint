@@ -5,11 +5,7 @@
         xmlns:vm="clr-namespace:SWCPaint.Wpf.ViewModels"
         xmlns:conv="clr-namespace:SWCPaint.Wpf.Converters"
         Title="Paint" Height="720" Width="1280" Icon="/Assets/Icons/paint-icon.png">
-
-    <Window.DataContext>
-        <vm:MainViewModel />
-    </Window.DataContext>
-
+    
     <Window.InputBindings>
         <KeyBinding Key="Z" Modifiers="Ctrl" Command="{Binding UndoCommand}" />
         <KeyBinding Key="Y" Modifiers="Ctrl" Command="{Binding RedoCommand}" />
@@ -141,7 +137,7 @@
                     </Border.Effect>
 
                     <views:DrawingCanvas Project="{Binding Project}" 
-                                         ActiveTool="{Binding CurrentTool}" Margin="0,-20,0,20" />
+                                         ActiveTool="{Binding CurrentTool}" />
                 </Border>
             </ScrollViewer>
 

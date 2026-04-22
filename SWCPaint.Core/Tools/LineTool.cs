@@ -5,42 +5,48 @@ using SWCPaint.Core.Models.Shapes;
 
 namespace SWCPaint.Core.Tools;
 
-public class PencilTool : ITool
+public class LineTool : ITool
 {
-    private Polyline? _currentPolyline;
-    public LayerElement? ActiveElement => _currentPolyline;
-
-    public PencilTool() {}
+    private Line? _currentLine;
+    public LayerElement? ActiveElement => _currentLine;
 
     public void OnMouseDown(Point point, ToolContext toolContext)
     {
-        _currentPolyline = new Polyline
+        _currentLine = new Line(point, point)
         {
             StrokeColor = toolContext.Settings.StrokeColor,
             Thickness = toolContext.Settings.Thickness
         };
-
-        _currentPolyline.Points.Add(point);
     }
 
     public void OnMouseMove(Point point, ToolContext toolContext)
     {
-        _currentPolyline?.Points.Add(point);
+        if (_currentLine == null) return;
+
+        _currentLine.End = point;
     }
 
     public void OnMouseUp(Point point, ToolContext toolContext)
     {
-        if (_currentPolyline != null) 
+        if (_currentLine != null)
         {
-            _currentPolyline.Points.Add(point);
+            if (Math.Abs(_currentLine.Start.X - _currentLine.End.X) < 1 &&
+                Math.Abs(_currentLine.Start.Y - _currentLine.End.Y) < 1)
+            {
+                _currentLine = null;
+                return;
+            }
+
+            _currentLine.End = point;
 
             var command = new AddElementCommand(
                 toolContext.Project.CurrentLayer,
-                _currentPolyline
+                _currentLine
             );
+
             toolContext.History.Execute(command);
         }
-        
-        _currentPolyline = null;
+
+        _currentLine = null;
     }
 }

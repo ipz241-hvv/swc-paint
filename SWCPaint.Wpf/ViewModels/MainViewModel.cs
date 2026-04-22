@@ -2,6 +2,7 @@
 using System.Windows.Input;
 using SWCPaint.Core.Commands;
 using SWCPaint.Core.Interfaces;
+using SWCPaint.Core.Interfaces.Tools;
 using SWCPaint.Core.Models;
 using SWCPaint.Core.Services;
 using SWCPaint.Core.Tools;
@@ -13,18 +14,31 @@ namespace SWCPaint.Wpf.ViewModels;
 public class MainViewModel : BaseViewModel
 {
     private Project _project;
+    private HistoryManager _history;
+    private readonly IDialogService _dialogService;
     private readonly ToolRegistry _toolRegistry;
     private ITool _currentTool;
     private readonly List<ToolDisplayItem> _toolInfos = new()
     {
         new() { Name = "Pencil", DisplayName = "Олівець", IconPath = "/Assets/Icons/Tools/pencil.png" },
         new() { Name = "Rectangle", DisplayName = "Прямокутник", IconPath = "/Assets/Icons/Tools/rectangle.png" },
-        new() { Name = "Ellipse", DisplayName = "Еліпс", IconPath = "/Assets/Icons/Tools/ellipse.png" }
+        new() { Name = "Ellipse", DisplayName = "Еліпс", IconPath = "/Assets/Icons/Tools/ellipse.png" },
+        new() { Name = "Eraser", DisplayName = "Гумка", IconPath = "/Assets/Icons/Tools/eraser.png" },
+        new() { Name = "Line", DisplayName = "Лінія", IconPath = "/Assets/Icons/Tools/line.png" }
     };
     private string _statusText = "Готово";
 
-    public HistoryManager History { get; } = new HistoryManager();
-    public LayersViewModel LayersContext { get; }
+    public HistoryManager History 
+    { 
+        get => _history; 
+        private set
+        {
+            _history = value;
+            OnPropertyChanged();
+            _history.HistoryChanged += () => CommandManager.InvalidateRequerySuggested();
+        }
+    }
+    public LayersViewModel LayersContext { get; private set; }
 
     public Project Project
     {
@@ -117,14 +131,17 @@ public class MainViewModel : BaseViewModel
     public ICommand RedoCommand { get; }
     public ICommand SaveProjectCommand { get; }
 
-    public MainViewModel()
+    public MainViewModel(IDialogService dialogService)
     {
         _toolRegistry = new ToolRegistry(Settings);
         _project = new Project(800, 600, "Фон");
+        _dialogService = dialogService;
+        _history = new HistoryManager();
+        _history.HistoryChanged += () => CommandManager.InvalidateRequerySuggested();
         CurrentTool = _toolRegistry.GetTool<PencilTool>();
         Settings.SettingsChanged += () => OnPropertyChanged(nameof(Settings));
 
-        LayersContext = new LayersViewModel(_project, History);
+        LayersContext = new LayersViewModel(_project, History, _dialogService);
 
         SelectToolCommand = new RelayCommand(param =>
         {
@@ -147,8 +164,21 @@ public class MainViewModel : BaseViewModel
         _currentTool = _toolRegistry.GetTool<PencilTool>();
 
         NewProjectCommand = new RelayCommand(_ => {
-            Project = new Project(800, 600, "Фон");
-            StatusText = $"Створено проєкт {Project.Width}x{Project.Height} пікслів";
+            var result = _dialogService.ShowNewProjectDialog();
+
+            if (result != null)
+            {
+                var (w, h, bgColor) = result.Value;
+
+                History = new HistoryManager();
+                Project = new Project(w, h, "Фон");
+                Project.BackgroundColor = bgColor;
+
+                LayersContext = new LayersViewModel(Project, History, _dialogService);
+                OnPropertyChanged(nameof(LayersContext));
+
+                StatusText = $"Створено новий проєкт {w}x{h}";
+            }
         });
 
         UndoCommand = new RelayCommand(

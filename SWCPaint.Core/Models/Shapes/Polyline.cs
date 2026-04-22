@@ -1,5 +1,4 @@
 ﻿using SWCPaint.Core.Interfaces;
-using SWCPaint.Core.Interfaces.Shapes;
 
 namespace SWCPaint.Core.Models.Shapes;
 
@@ -31,7 +30,7 @@ public class Polyline : Shape
         context.DrawPath(Points, StrokeColor, null, Thickness, false);
     }
 
-    public override void Accept(IShapeVisitor visitor)
+    public override void Accept(IElementVisitor visitor)
     {
         visitor.Visit(this);
     }

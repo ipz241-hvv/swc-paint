@@ -1,9 +1,8 @@
-﻿using SWCPaint.Core.Interfaces.Shapes;
-using SWCPaint.Core.Models;
+﻿using SWCPaint.Core.Models;
 
 namespace SWCPaint.Core.Interfaces.Serialization;
 
-public interface IImageExporter : IShapeVisitor
+public interface IImageExporter : IElementVisitor
 {
     byte[] Export(Project project);
 }

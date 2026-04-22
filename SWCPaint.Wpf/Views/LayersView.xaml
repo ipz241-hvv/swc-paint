@@ -5,18 +5,52 @@
 
     <UserControl.Resources>
         <Style x:Key="LayerCardStyle" TargetType="ListBoxItem">
+            <Style.Triggers>
+                <EventTrigger RoutedEvent="PreviewMouseRightButtonDown">
+                    <BeginStoryboard>
+                        <Storyboard>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Style.Triggers>
+            
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Margin" Value="6,3"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+
+            <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}" />
+            
+            <Setter Property="ContextMenu">
+                <Setter.Value>
+                    <ContextMenu>
+                        <MenuItem Header="Перейменувати" 
+                          Command="{Binding PlacementTarget.Tag.RenameLayerCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="✎"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem Header="Видалити" 
+                          Command="{Binding PlacementTarget.Tag.RemoveLayerCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                          CommandParameter="{Binding Id}"
+                          Foreground="#DC3545">
+                            <MenuItem.Icon>
+                                <TextBlock Text="×" Foreground="#DC3545"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </Setter.Value>
+            </Setter>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border x:Name="OuterBorder" 
-                                CornerRadius="6" 
-                                BorderThickness="1.5" 
-                                BorderBrush="#DEE2E6" 
-                                Background="White"
-                                SnapsToDevicePixels="True">
+                            CornerRadius="6" 
+                            BorderThickness="1.5" 
+                            BorderBrush="#DEE2E6" 
+                            Background="White"
+                            SnapsToDevicePixels="True">
                             <ContentPresenter Margin="8,6"/>
                         </Border>
                         <ControlTemplate.Triggers>
