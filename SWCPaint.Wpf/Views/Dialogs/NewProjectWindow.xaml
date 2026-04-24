@@ -2,8 +2,10 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Новий проєкт" SizeToContent="WidthAndHeight" 
-        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Padding="20,20,20,20">
-    <StackPanel Width="250" Margin="10">
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Icon="/Assets/Icons/paint-icon.png">
+
+    <StackPanel Width="250" Margin="15">
         <TextBlock Text="Ширина (px):" Margin="0,0,0,5"/>
         <TextBox Text="{Binding Width, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,15"/>
 
@@ -11,17 +13,15 @@
         <TextBox Text="{Binding Height, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,15"/>
 
         <TextBlock Text="Колір фону:" Margin="0,0,0,5"/>
-        <ComboBox ItemsSource="{Binding AvailableColors}" 
-                  SelectedItem="{Binding SelectedBackgroundColor}" Margin="0,0,0,20">
-            <ComboBox.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel Orientation="Horizontal">
-                        <Border Width="12" Height="12" Background="{Binding Name}" Margin="0,0,5,0" BorderBrush="Black" BorderThickness="0.5"/>
-                        <TextBlock Text="{Binding Name}"/>
-                    </StackPanel>
-                </DataTemplate>
-            </ComboBox.ItemTemplate>
-        </ComboBox>
+
+        <Button Command="{Binding ChangeColorCommand}" Height="30" Margin="0,0,0,20">
+            <StackPanel Orientation="Horizontal">
+                <Border Width="16" Height="16" BorderBrush="Black" BorderThickness="1">
+                    <Rectangle Fill="{Binding BackgroundColor, Converter={StaticResource CoreColorToWpfBrushConverter}}"/>
+                </Border>
+                <TextBlock Text=" Обрати колір..." VerticalAlignment="Center" Margin="5,0,0,0"/>
+            </StackPanel>
+        </Button>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="Створити" IsDefault="True" Width="80" Click="Accept_Click" Margin="0,0,10,0"/>

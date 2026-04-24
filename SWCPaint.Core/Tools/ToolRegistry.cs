@@ -10,11 +10,12 @@ public class ToolRegistry
 
     public ToolRegistry(DrawingSettings settings)
     {
-        Register(new PencilTool());
-        Register(new ShapeTool<Ellipse>());
-        Register(new ShapeTool<Rectangle>());
-        Register(new EraserTool());
-        Register(new LineTool());
+        Register(new PencilTool(1, 10));
+        Register(new BrushTool(1, 50));
+        Register(new ShapeTool<Ellipse>(1, 50));
+        Register(new ShapeTool<Rectangle>(1, 50));
+        Register(new EraserTool(1, 100));
+        Register(new LineTool(1, 50));
     }
 
     private void Register(ITool tool)

@@ -1,6 +1,8 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using SWCPaint.Core.Interfaces.Tools;
 using SWCPaint.Core.Models;
 using SWCPaint.Core.Models.Shapes;
@@ -78,7 +80,7 @@ public class DrawingCanvas : FrameworkElement
 
     private void OnProjectRequestRedraw()
     {
-        Dispatcher.Invoke(InvalidateVisual);
+        Application.Current.Dispatcher.Invoke(InvalidateVisual);
     }
 
     protected override void OnRender(DrawingContext drawingContext)
@@ -99,7 +101,7 @@ public class DrawingCanvas : FrameworkElement
             }
             else if (element is EraserPath eraser)
             {
-                adapter.DrawPath(eraser.Points, new Core.Models.Color(128, 200, 200, 128), null, eraser.Thickness, false);
+                adapter.DrawPath(eraser.Points, new Core.Models.Color(128, 200, 200, 128), null, eraser.Thickness, false, false);
             }
         }
     }
@@ -112,7 +114,7 @@ public class DrawingCanvas : FrameworkElement
 
         CaptureMouse();
         var position = e.GetPosition(this);
-        var corePoint = new SWCPaint.Core.Models.Point(position.X, position.Y);
+        var corePoint = new Core.Models.Point(position.X, position.Y);
 
         ActiveTool.OnMouseDown(corePoint, ToolContext);
 
@@ -124,7 +126,7 @@ public class DrawingCanvas : FrameworkElement
         if (!IsMouseCaptured || ActiveTool == null || Project == null) return;
 
         var position = e.GetPosition(this);
-        var corePoint = new SWCPaint.Core.Models.Point(position.X, position.Y);
+        var corePoint = new Core.Models.Point(position.X, position.Y);
 
         ActiveTool.OnMouseMove(corePoint, ToolContext);
 
@@ -136,7 +138,7 @@ public class DrawingCanvas : FrameworkElement
         if (!IsMouseCaptured) return;
 
         var position = e.GetPosition(this);
-        var corePoint = new SWCPaint.Core.Models.Point(position.X, position.Y);
+        var corePoint = new Core.Models.Point(position.X, position.Y);
 
         ActiveTool?.OnMouseUp(corePoint, ToolContext);
 

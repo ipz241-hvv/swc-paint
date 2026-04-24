@@ -13,6 +13,15 @@ public class ShapeTool<TShape> : ITool where TShape : BoxBoundedShape
 
     public LayerElement? ActiveElement => _currentShape;
 
+    public double MinThickness { get; }
+    public double MaxThickness { get; }
+
+    public ShapeTool(double minThickness, double maxThickness)
+    {
+        MinThickness = minThickness;
+        MaxThickness = maxThickness;
+    }
+
     public void OnMouseDown(Point point, ToolContext toolContext)
     {
         _startPoint = point;

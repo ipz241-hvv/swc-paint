@@ -9,10 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\Icons\add-layer.png" />
     <None Remove="Assets\Icons\brush.png" />
     <None Remove="Assets\Icons\paint-icon.png" />
     <None Remove="Assets\Icons\pencil.png" />
     <None Remove="Assets\Icons\redo.png" />
+    <None Remove="Assets\Icons\remove-layer.png" />
     <None Remove="Assets\Icons\Tools\ellipse.png" />
     <None Remove="Assets\Icons\Tools\eraser.png" />
     <None Remove="Assets\Icons\Tools\line.png" />
@@ -21,6 +23,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\Icons\add-layer.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\remove-layer.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Assets\Icons\Tools\eraser.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
@@ -51,10 +59,6 @@
     <Resource Include="Assets\Icons\undo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>

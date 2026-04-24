@@ -5,6 +5,7 @@ namespace SWCPaint.Core.Models.Shapes;
 public class Polyline : Shape
 {
     public List<Point> Points { get; set; } = new List<Point>();
+    public bool IsSmooth { get; set; } = false;
 
     public override BoundingBox Bounds
     {
@@ -21,13 +22,16 @@ public class Polyline : Shape
         }
     }
 
-    public Polyline() { }
+    public Polyline(List<Point>? points = null)
+    {
+        Points = points ?? [];
+    }
 
     public override void Draw(IDrawingContext context)
     {
         if (Points.Count < 2) return;
 
-        context.DrawPath(Points, StrokeColor, null, Thickness, false);
+        context.DrawPath(Points, StrokeColor, null, Thickness, false, IsSmooth);
     }
 
     public override void Accept(IElementVisitor visitor)

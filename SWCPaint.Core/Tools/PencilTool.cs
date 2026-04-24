@@ -8,16 +8,28 @@ namespace SWCPaint.Core.Tools;
 public class PencilTool : ITool
 {
     private Polyline? _currentPolyline;
+    public double MinThickness { get; }
+    public double MaxThickness { get; }
     public LayerElement? ActiveElement => _currentPolyline;
+    protected Polyline? CurrentPolyline
+    {
+        get => _currentPolyline;
+        set => _currentPolyline = value;
+    }
 
-    public PencilTool() {}
+    public PencilTool(double minThickness, double maxThickness)
+    {
+        MinThickness = minThickness;
+        MaxThickness = maxThickness;
+    }
 
-    public void OnMouseDown(Point point, ToolContext toolContext)
+    public virtual void OnMouseDown(Point point, ToolContext toolContext)
     {
         _currentPolyline = new Polyline
         {
             StrokeColor = toolContext.Settings.StrokeColor,
-            Thickness = toolContext.Settings.Thickness
+            Thickness = toolContext.Settings.Thickness,
+            IsSmooth = false
         };
 
         _currentPolyline.Points.Add(point);

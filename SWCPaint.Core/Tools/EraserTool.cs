@@ -9,6 +9,15 @@ public class EraserTool : ITool
     private EraserPath? _currentEraser;
     public LayerElement? ActiveElement => _currentEraser;
 
+    public double MinThickness { get; }
+    public double MaxThickness { get; }
+
+    public EraserTool(double minThickness, double maxThickness)
+    {
+        MinThickness = minThickness;
+        MaxThickness = maxThickness;
+    }
+
     public void OnMouseDown(Point point, ToolContext toolContext)
     {
         _currentEraser = new EraserPath(toolContext.Settings.Thickness);

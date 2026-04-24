@@ -1,7 +1,9 @@
-﻿using System.Reflection;
+﻿using System.IO;
 using System.Windows.Input;
 using SWCPaint.Core.Commands;
 using SWCPaint.Core.Interfaces;
+using SWCPaint.Core.Interfaces.Persistence;
+using SWCPaint.Core.Interfaces.Serialization;
 using SWCPaint.Core.Interfaces.Tools;
 using SWCPaint.Core.Models;
 using SWCPaint.Core.Services;
@@ -17,10 +19,14 @@ public class MainViewModel : BaseViewModel
     private HistoryManager _history;
     private readonly IDialogService _dialogService;
     private readonly ToolRegistry _toolRegistry;
+    private readonly IProjectSerializer _projectSerializer;
+    private readonly IImageExporter _imageExporter;
+    private readonly IFileManager _fileManager;
     private ITool _currentTool;
     private readonly List<ToolDisplayItem> _toolInfos = new()
     {
         new() { Name = "Pencil", DisplayName = "Олівець", IconPath = "/Assets/Icons/Tools/pencil.png" },
+        new() { Name = "Brush", DisplayName = "Пензель", IconPath = "/Assets/Icons/Tools/brush.png" },
         new() { Name = "Rectangle", DisplayName = "Прямокутник", IconPath = "/Assets/Icons/Tools/rectangle.png" },
         new() { Name = "Ellipse", DisplayName = "Еліпс", IconPath = "/Assets/Icons/Tools/ellipse.png" },
         new() { Name = "Eraser", DisplayName = "Гумка", IconPath = "/Assets/Icons/Tools/eraser.png" },
@@ -50,73 +56,22 @@ public class MainViewModel : BaseViewModel
             OnPropertyChanged();
         }
     }
-    public IEnumerable<PropertyInfo> AvailableColors 
-    {
-        get
-        {
-            return typeof(System.Windows.Media.Colors).GetProperties();
-        }
-    }
     public IEnumerable<ToolDisplayItem> ToolInfos => _toolInfos;
-    public PropertyInfo SelectedStrokeColor
-    {
-        get
-        {
-            var coreColor = Settings.StrokeColor;
-            return AvailableColors.FirstOrDefault(p =>
-            {
-                var wpfColor = (System.Windows.Media.Color)p.GetValue(null)!;
-                return wpfColor.R == coreColor.Red && wpfColor.G == coreColor.Green && wpfColor.B == coreColor.Blue;
-            }) ?? AvailableColors.First(p => p.Name == "Black");
-        }
-        set
-        {
-            if (value != null)
-            {
-                var wpfColor = (System.Windows.Media.Color)value.GetValue(null)!;
-                Settings.StrokeColor = new SWCPaint.Core.Models.Color(wpfColor.R, wpfColor.G, wpfColor.B, wpfColor.A);
-                OnPropertyChanged();
-            }
-        }
-    }
-    public PropertyInfo SelectedFillColor
-    {
-        get
-        {
-            var coreColor = Settings.FillColor;
-
-            if (coreColor == null)
-                return AvailableColors.First(p => p.Name == "Transparent");
-
-            var colorValue = coreColor.Value;
-
-            return AvailableColors.FirstOrDefault(p =>
-            {
-                var wpfColor = (System.Windows.Media.Color)p.GetValue(null)!;
-                return wpfColor.R == colorValue.Red 
-                    && wpfColor.G == colorValue.Green 
-                    && wpfColor.B == colorValue.Blue 
-                    && wpfColor.A == colorValue.Alpha;
-            }) ?? AvailableColors.First(p => p.Name == "Transparent");
-        }
-        set
-        {
-            if (value == null || value.Name == "Transparent")
-            {
-                Settings.FillColor = null;
-            }
-            else
-            {
-                var wpfColor = (System.Windows.Media.Color)value.GetValue(null)!;
-                Settings.FillColor = new SWCPaint.Core.Models.Color(wpfColor.R, wpfColor.G, wpfColor.B, wpfColor.A);
-            }
-            OnPropertyChanged();
-        }
-    }
     public ITool CurrentTool
     {
         get => _currentTool;
-        set { _currentTool = value; OnPropertyChanged(); }
+        set
+        {
+            _currentTool = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(MinThickness));
+            OnPropertyChanged(nameof(MaxThickness));
+
+            if (Settings != null)
+            {
+                Settings.Thickness = Math.Clamp(Settings.Thickness, MinThickness, MaxThickness);
+            }
+        }
     }
     public string StatusText
     {
@@ -124,19 +79,32 @@ public class MainViewModel : BaseViewModel
         set { _statusText = value; OnPropertyChanged(); }
     }
     public DrawingSettings Settings => DrawingSettings.Instance;
+    public double MinThickness => CurrentTool?.MinThickness ?? 1.0;
+    public double MaxThickness => CurrentTool?.MaxThickness ?? 50.0;
 
     public ICommand SelectToolCommand { get; }
     public ICommand NewProjectCommand { get; }
     public ICommand UndoCommand { get; }
     public ICommand RedoCommand { get; }
     public ICommand SaveProjectCommand { get; }
+    public ICommand LoadProjectCommand { get; }
+    public ICommand ExportImageCommand { get; }
+    public ICommand OpenColorPickerCommand { get; }
 
-    public MainViewModel(IDialogService dialogService)
+    public MainViewModel(
+        IDialogService dialogService, 
+        IFileManager fileManager, 
+        IProjectSerializer projectSerializer,
+        IImageExporter imageExporter
+        )
     {
         _toolRegistry = new ToolRegistry(Settings);
         _project = new Project(800, 600, "Фон");
         _dialogService = dialogService;
         _history = new HistoryManager();
+        _projectSerializer = projectSerializer;
+        _imageExporter = imageExporter;
+        _fileManager = fileManager;
         _history.HistoryChanged += () => CommandManager.InvalidateRequerySuggested();
         CurrentTool = _toolRegistry.GetTool<PencilTool>();
         Settings.SettingsChanged += () => OnPropertyChanged(nameof(Settings));
@@ -163,6 +131,10 @@ public class MainViewModel : BaseViewModel
 
         _currentTool = _toolRegistry.GetTool<PencilTool>();
 
+        ExportImageCommand = new RelayCommand(
+            ExportImage,
+            _ => Project != null
+            );
         NewProjectCommand = new RelayCommand(_ => {
             var result = _dialogService.ShowNewProjectDialog();
 
@@ -180,7 +152,6 @@ public class MainViewModel : BaseViewModel
                 StatusText = $"Створено новий проєкт {w}x{h}";
             }
         });
-
         UndoCommand = new RelayCommand(
             _ => {
                 History.Undo();
@@ -198,11 +169,99 @@ public class MainViewModel : BaseViewModel
             _ => History.CanRedo
         );
         SaveProjectCommand = new RelayCommand(_ => {
-            StatusText = "Збереження...";
+            var filePath = _dialogService.SaveFileDialog("Paint Project|*.paint", defaultExt: ".paint");
+
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                return;
+            }
+
+            try
+            {
+                string json = _projectSerializer.Serialize(Project);
+
+                _fileManager.SaveText(filePath, json);
+
+                StatusText = "Проєкт успішно збережено";
+            }
+            catch (Exception ex)
+            {
+                StatusText = $"Помилка збереження: {ex.Message}";
+            }
+        });
+        LoadProjectCommand = new RelayCommand(_ =>
+        {
+            var filePath = _dialogService.OpenFileDialog("Paint Project|*.paint");
+
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                return;
+            }
+
+            try
+            {
+                string json = _fileManager.LoadText(filePath);
+
+                var loadedProject = _projectSerializer.Deserialize(json);
+
+                History = new HistoryManager();
+                Project = loadedProject;
+                LayersContext = new LayersViewModel(Project, History, _dialogService);
+
+                OnPropertyChanged(nameof(LayersContext));
+                StatusText = $"Проєкт завантажено: {Path.GetFileName(filePath)}";
+            }
+            catch (Exception ex)
+            {
+                StatusText = $"Помилка завантаження: {ex.Message}";
+            }
+        });
+        OpenColorPickerCommand = new RelayCommand(parameter =>
+        {
+            string type = parameter as string ?? "Stroke";
+
+            var currentColor = type == "Fill"
+                ? (Settings.FillColor ?? new Color(0, 0, 0, 0))
+                : Settings.StrokeColor;
+
+            var newColor = _dialogService.ShowColorPickerDialog(currentColor);
+
+            if (newColor != null)
+            {
+                if (type == "Fill")
+                {
+                    Settings.FillColor = newColor.Value;
+                }
+                else
+                {
+                    Settings.StrokeColor = newColor.Value;
+                }
+
+                OnPropertyChanged(nameof(Settings));
+            }
         });
 
         History.HistoryChanged += () => {
             CommandManager.InvalidateRequerySuggested();
         };
+    }
+
+    private void ExportImage(object? parameter)
+    {
+        var filePath = _dialogService.SaveFileDialog("PNG Image|*.png", "Unnamed.png");
+        if (string.IsNullOrEmpty(filePath)) return;
+
+        try
+        {
+            byte[] imageData = _imageExporter.Export(Project);
+
+            _fileManager.Save(filePath, imageData);
+
+            StatusText = "Експорт завершено успішно";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Помилка експорту: {ex.Message}";
+        }
     }
 }

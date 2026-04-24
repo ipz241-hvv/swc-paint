@@ -2,7 +2,7 @@
 
 namespace SWCPaint.Core.Interfaces.Serialization;
 
-public interface IImageExporter : IElementVisitor
+public interface IImageExporter
 {
     byte[] Export(Project project);
 }

@@ -93,17 +93,15 @@ public class WpfDrawingContext : IDrawingContext
         _currentContext.DrawEllipse(brush, pen, ToWpfPoint(center), radiusX, radiusY);
     }
 
-    public void DrawPath(IEnumerable<CorePoint> points, CoreColor strokeColor, CoreColor? fillColor, double thickness, bool isClosed)
+    public void DrawPath(IEnumerable<CorePoint> points, CoreColor strokeColor, CoreColor? fillColor, double thickness, bool isClosed, bool isSmooth)
     {
         using var enumerator = points.GetEnumerator();
-
         if (!enumerator.MoveNext()) return;
 
         var streamGeometry = new StreamGeometry();
         using (StreamGeometryContext geometryContext = streamGeometry.Open())
         {
             geometryContext.BeginFigure(ToWpfPoint(enumerator.Current), fillColor.HasValue, isClosed);
-
             while (enumerator.MoveNext())
             {
                 geometryContext.LineTo(ToWpfPoint(enumerator.Current), true, true);
@@ -111,11 +109,21 @@ public class WpfDrawingContext : IDrawingContext
         }
 
         var pen = new Pen(ToWpfBrush(strokeColor), thickness);
-        pen.StartLineCap = PenLineCap.Round;
-        pen.EndLineCap = PenLineCap.Round;
-        pen.LineJoin = PenLineJoin.Round;
-        pen.Freeze();
 
+        if (isSmooth)
+        {
+            pen.StartLineCap = PenLineCap.Round;
+            pen.EndLineCap = PenLineCap.Round;
+            pen.LineJoin = PenLineJoin.Round;
+        }
+        else
+        {
+            pen.StartLineCap = PenLineCap.Square;
+            pen.EndLineCap = PenLineCap.Square;
+            pen.LineJoin = PenLineJoin.Miter;
+        }
+
+        pen.Freeze();
         var brush = fillColor.HasValue ? ToWpfBrush(fillColor.Value) : null;
         _currentContext.DrawGeometry(brush, pen, streamGeometry);
     }

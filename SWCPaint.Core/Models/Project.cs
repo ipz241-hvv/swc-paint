@@ -53,7 +53,7 @@ public class Project
     }
     public IReadOnlyList<Layer> Layers => _layers.AsReadOnly();
 
-    public Project(int width, int height, string backgroundLayerName)
+    public Project(double width, double height, string backgroundLayerName)
     {
         Width = width;
         Height = height;
@@ -155,5 +155,10 @@ public class Project
         _layers.Insert(toIndex, layer);
 
         RequestRedraw();
+    }
+
+    public void ClearLayers()
+    {
+        _layers.Clear();
     }
 }

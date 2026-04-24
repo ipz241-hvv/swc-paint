@@ -1,0 +1,45 @@
+﻿<Window x:Class="SWCPaint.Wpf.Views.Dialogs.ColorPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Вибір кольору" Icon="/Assets/Icons/paint-icon.png" Height="380" Width="320"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Ellipse Grid.Row="0" Width="80" Height="80" Stroke="Gray" StrokeThickness="1" 
+                 Fill="{Binding PreviewBrush}" Margin="0,0,0,20"/>
+
+        <StackPanel Grid.Row="1" VerticalAlignment="Center">
+            <TextBlock Text="Відтінок (Hue)"/>
+            <Slider Minimum="0" Maximum="360" Value="{Binding H}" Margin="0,5,0,15">
+                <Slider.Background>
+                    <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                        <GradientStop Color="Red" Offset="0"/>
+                        <GradientStop Color="Yellow" Offset="0.16"/>
+                        <GradientStop Color="Green" Offset="0.33"/>
+                        <GradientStop Color="Cyan" Offset="0.5"/>
+                        <GradientStop Color="Blue" Offset="0.66"/>
+                        <GradientStop Color="Magenta" Offset="0.83"/>
+                        <GradientStop Color="Red" Offset="1"/>
+                    </LinearGradientBrush>
+                </Slider.Background>
+            </Slider>
+
+            <TextBlock Text="Насиченість (Saturation)"/>
+            <Slider Minimum="0" Maximum="1" Value="{Binding S}" Margin="0,5,0,15"/>
+
+            <TextBlock Text="Яскравість (Value)"/>
+            <Slider Minimum="0" Maximum="1" Value="{Binding V}" Margin="0,5,0,15"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="ОК" Width="80" Margin="0,0,10,0" IsDefault="True" Click="Ok_Click"/>
+            <Button Content="Скасувати" Width="80" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

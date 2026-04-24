@@ -9,11 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Persistence\" />
-    <Folder Include="Serialization\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\SWCPaint.Core\SWCPaint.Core.csproj" />
   </ItemGroup>
 

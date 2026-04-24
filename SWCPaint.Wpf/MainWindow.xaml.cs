@@ -1,7 +1,11 @@
 ﻿using System.Windows;
 using SWCPaint.Core.Interfaces;
+using SWCPaint.Core.Interfaces.Persistence;
+using SWCPaint.Core.Interfaces.Serialization;
+using SWCPaint.Infrastructure.Persistence;
+using SWCPaint.Infrastructure.Services;
+using SWCPaint.Wpf.Services;
 using SWCPaint.Wpf.ViewModels;
-using SWCPaint.Wpf.Views.Dialogs;
 
 namespace SWCPaint.Wpf;
 
@@ -15,12 +19,15 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         IDialogService dialogService = new WpfDialogService();
+        IFileManager fileManager = new PhysicalFileManager();
+        IProjectSerializer projectSerializer = new JsonProjectSerializer();
+        IImageExporter imageExporter = new WpfImageExporter();
 
-        DataContext = new MainViewModel(dialogService);
+        DataContext = new MainViewModel(dialogService, fileManager, projectSerializer, imageExporter);
     }
 
     public void Exit_Click(object sender, RoutedEventArgs e)
-    {
+    {   
         Close();
     }
 }

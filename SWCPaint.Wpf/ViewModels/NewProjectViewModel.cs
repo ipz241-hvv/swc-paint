@@ -1,34 +1,45 @@
-﻿namespace SWCPaint.Wpf.ViewModels;
+﻿using System.Windows.Input;
+using SWCPaint.Core.Interfaces;
+using SWCPaint.Core.Models;
+using SWCPaint.Wpf.Commands;
+
+namespace SWCPaint.Wpf.ViewModels;
 
 public class NewProjectViewModel : BaseViewModel
 {
     private int _width = 800;
     private int _height = 600;
-    private System.Reflection.PropertyInfo _selectedBackgroundColor;
+    private Color _backgroundColor = new Color(255, 255, 255);
+    private readonly IDialogService _dialogService;
 
     public int Width
     {
         get => _width;
         set { _width = value; OnPropertyChanged(); }
     }
-
     public int Height
     {
         get => _height;
         set { _height = value; OnPropertyChanged(); }
     }
-
-    public IEnumerable<System.Reflection.PropertyInfo> AvailableColors =>
-        typeof(System.Windows.Media.Colors).GetProperties();
-
-    public System.Reflection.PropertyInfo SelectedBackgroundColor
+    public Color BackgroundColor
     {
-        get => _selectedBackgroundColor;
-        set { _selectedBackgroundColor = value; OnPropertyChanged(); }
+        get => _backgroundColor;
+        set { _backgroundColor = value; OnPropertyChanged(); }
     }
+    public ICommand ChangeColorCommand { get; }
 
-    public NewProjectViewModel()
+    public NewProjectViewModel(IDialogService dialogService)
     {
-        _selectedBackgroundColor = AvailableColors.First(p => p.Name == "White");
+        _dialogService = dialogService;
+
+        ChangeColorCommand = new RelayCommand(_ =>
+        {
+            var newColor = _dialogService.ShowColorPickerDialog(BackgroundColor);
+            if (newColor != null)
+            {
+                BackgroundColor = newColor.Value;
+            }
+        });
     }
 }

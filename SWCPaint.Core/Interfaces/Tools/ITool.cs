@@ -5,6 +5,9 @@ namespace SWCPaint.Core.Interfaces.Tools;
 
 public interface ITool
 {
+    double MinThickness { get; }
+    double MaxThickness { get; }
+
     public LayerElement? ActiveElement { get; }
     public void OnMouseDown(Point point, ToolContext toolContext);
     public void OnMouseMove(Point point, ToolContext toolContext);

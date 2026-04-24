@@ -10,6 +10,15 @@ public class LineTool : ITool
     private Line? _currentLine;
     public LayerElement? ActiveElement => _currentLine;
 
+    public double MinThickness { get; }
+    public double MaxThickness { get; }
+
+    public LineTool(double minThickness, double maxThickness)
+    {
+        MinThickness = minThickness;
+        MaxThickness = maxThickness;
+    }
+
     public void OnMouseDown(Point point, ToolContext toolContext)
     {
         _currentLine = new Line(point, point)

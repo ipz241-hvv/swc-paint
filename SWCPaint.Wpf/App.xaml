@@ -5,6 +5,7 @@
              xmlns:converters="clr-namespace:SWCPaint.Wpf.Converters"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        <converters:CoreColorToWpfBrushConverter x:Key="CoreColorToWpfBrushConverter" />
         <converters:ToolToBooleanConverter x:Key="ToolToBooleanConverter" />
     </Application.Resources>
 </Application>
