@@ -74,7 +74,6 @@ public class WpfDialogService : IDialogService
         {
             return getResult();
         }
-
         return default;
     }
 }
