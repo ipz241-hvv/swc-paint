@@ -19,9 +19,4 @@ public class Rectangle : BoxBoundedShape, IFillable
     {
         context.DrawRectangle(Position, Width, Height, StrokeColor, FillColor, Thickness);
     }
-
-    public override bool IsHit(Point point)
-    {
-        return Bounds.Contains(point);
-    }
 }

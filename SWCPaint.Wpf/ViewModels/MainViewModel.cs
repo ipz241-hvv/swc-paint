@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Windows.Input;
 using SWCPaint.Core.Commands;
 using SWCPaint.Core.Interfaces;
@@ -10,6 +11,7 @@ using SWCPaint.Core.Services;
 using SWCPaint.Core.Tools;
 using SWCPaint.Wpf.Commands;
 using SWCPaint.Wpf.Models;
+using SWCPaint.Wpf.Resources;
 
 namespace SWCPaint.Wpf.ViewModels;
 
@@ -23,16 +25,8 @@ public class MainViewModel : BaseViewModel
     private readonly IImageExporter _imageExporter;
     private readonly IFileManager _fileManager;
     private ITool _currentTool;
-    private readonly List<ToolDisplayItem> _toolInfos = new()
-    {
-        new() { Name = "Pencil", DisplayName = "Олівець", IconPath = "/Assets/Icons/Tools/pencil.png" },
-        new() { Name = "Brush", DisplayName = "Пензель", IconPath = "/Assets/Icons/Tools/brush.png" },
-        new() { Name = "Rectangle", DisplayName = "Прямокутник", IconPath = "/Assets/Icons/Tools/rectangle.png" },
-        new() { Name = "Ellipse", DisplayName = "Еліпс", IconPath = "/Assets/Icons/Tools/ellipse.png" },
-        new() { Name = "Eraser", DisplayName = "Гумка", IconPath = "/Assets/Icons/Tools/eraser.png" },
-        new() { Name = "Line", DisplayName = "Лінія", IconPath = "/Assets/Icons/Tools/line.png" }
-    };
-    private string _statusText = "Готово";
+    private readonly List<ToolDisplayItem> _toolInfos = new();
+    private string _statusText;
 
     public HistoryManager History 
     { 
@@ -45,7 +39,6 @@ public class MainViewModel : BaseViewModel
         }
     }
     public LayersViewModel LayersContext { get; private set; }
-
     public Project Project
     {
         get => _project;
@@ -70,6 +63,7 @@ public class MainViewModel : BaseViewModel
             if (Settings != null)
             {
                 Settings.Thickness = Math.Clamp(Settings.Thickness, MinThickness, MaxThickness);
+                OnPropertyChanged(nameof(Settings));
             }
         }
     }
@@ -82,35 +76,73 @@ public class MainViewModel : BaseViewModel
     public double MinThickness => CurrentTool?.MinThickness ?? 1.0;
     public double MaxThickness => CurrentTool?.MaxThickness ?? 50.0;
 
-    public ICommand SelectToolCommand { get; }
-    public ICommand NewProjectCommand { get; }
-    public ICommand UndoCommand { get; }
-    public ICommand RedoCommand { get; }
-    public ICommand SaveProjectCommand { get; }
-    public ICommand LoadProjectCommand { get; }
-    public ICommand ExportImageCommand { get; }
-    public ICommand OpenColorPickerCommand { get; }
+    public Action? CloseAction { get; private set; }
+    public ICommand SelectToolCommand { get; private set; }
+    public ICommand NewProjectCommand { get; private set; }
+    public ICommand UndoCommand { get; private set; }
+    public ICommand RedoCommand { get; private set; }
+    public ICommand SaveProjectCommand { get; private set; }
+    public ICommand LoadProjectCommand { get; private set; }
+    public ICommand ExportImageCommand { get; private set; }
+    public ICommand OpenColorPickerCommand { get; private set; }
+    public ICommand ExitCommand { get; private set; }
 
     public MainViewModel(
-        IDialogService dialogService, 
-        IFileManager fileManager, 
+        IToolConfigurationService toolConfigService,
+        IDialogService dialogService,
+        IFileManager fileManager,
         IProjectSerializer projectSerializer,
-        IImageExporter imageExporter
-        )
+        IImageExporter imageExporter,
+        Action closeAction
+    )
     {
-        _toolRegistry = new ToolRegistry(Settings);
-        _project = new Project(800, 600, "Фон");
         _dialogService = dialogService;
-        _history = new HistoryManager();
+        _fileManager = fileManager;
         _projectSerializer = projectSerializer;
         _imageExporter = imageExporter;
-        _fileManager = fileManager;
-        _history.HistoryChanged += () => CommandManager.InvalidateRequerySuggested();
-        CurrentTool = _toolRegistry.GetTool<PencilTool>();
+        CloseAction = closeAction;
+
+        _toolRegistry = new ToolRegistry(Settings);
+        _history = new HistoryManager();
+        _project = new Project(800, 600, Strings.Layer_NewProject_Background);
+        LayersContext = new LayersViewModel(Project, History, _dialogService);
+
+        InitializeTools(toolConfigService);
+        InitializeCommands();
+        InitializeSubscribers();
+
+        _statusText = Strings.Paint_Status_Ready;
+    }
+
+    private void InitializeSubscribers()
+    {
         Settings.SettingsChanged += () => OnPropertyChanged(nameof(Settings));
+        History.HistoryChanged += () => CommandManager.InvalidateRequerySuggested();
+    }
 
-        LayersContext = new LayersViewModel(_project, History, _dialogService);
+    [MemberNotNull(nameof(_currentTool))]
+    private void InitializeTools(IToolConfigurationService toolConfigService)
+    {
+        var metadata = toolConfigService.GetToolsMetadata();
 
+        foreach (var m in metadata)
+        {
+            _toolInfos.Add(new ToolDisplayItem
+            {
+                Name = m.Name,
+                LocalizationKey = m.LocalizationKey,
+                IconPath = $"/Assets/Icons/Tools/{m.Name.ToLower()}.png",
+                DisplayName = Strings.ResourceManager.GetString(m.LocalizationKey) ?? m.Name
+            });
+        }
+        _currentTool = _toolRegistry.GetTool<PencilTool>();
+    }
+
+    [MemberNotNull(nameof(SelectToolCommand), nameof(ExitCommand), nameof(ExportImageCommand),
+               nameof(NewProjectCommand), nameof(UndoCommand), nameof(RedoCommand),
+               nameof(SaveProjectCommand), nameof(LoadProjectCommand), nameof(OpenColorPickerCommand))]
+    private void InitializeCommands()
+    {
         SelectToolCommand = new RelayCommand(param =>
         {
             string toolName = (param as string) ?? "Pencil";
@@ -121,20 +153,24 @@ public class MainViewModel : BaseViewModel
                 var displayInfo = _toolInfos.FirstOrDefault(d => d.Name == toolName);
 
                 string displayName = displayInfo?.DisplayName ?? toolName;
-                StatusText = $"Інструмент: {displayName}";
+                StatusText = $"{Strings.Tool_Select_Status}: {displayName}";
             }
-            catch (KeyNotFoundException ex)
+            catch (Exception)
             {
-                StatusText = $"Помилка: {ex.Message}";
+                StatusText = Strings.Tool_SelectFailed_Status;
             }
         });
 
-        _currentTool = _toolRegistry.GetTool<PencilTool>();
+        ExitCommand = new RelayCommand(_ =>
+        {
+            CloseAction?.Invoke();
+        });
 
         ExportImageCommand = new RelayCommand(
             ExportImage,
             _ => Project != null
-            );
+        );
+
         NewProjectCommand = new RelayCommand(_ => {
             var result = _dialogService.ShowNewProjectDialog();
 
@@ -143,65 +179,62 @@ public class MainViewModel : BaseViewModel
                 var (w, h, bgColor) = result.Value;
 
                 History = new HistoryManager();
-                Project = new Project(w, h, "Фон");
+                Project = new Project(w, h, Strings.Layer_NewProject_Background);
                 Project.BackgroundColor = bgColor;
 
                 LayersContext = new LayersViewModel(Project, History, _dialogService);
                 OnPropertyChanged(nameof(LayersContext));
 
-                StatusText = $"Створено новий проєкт {w}x{h}";
+                StatusText = $"{Strings.Project_New_Status} {w}x{h}";
             }
         });
+
         UndoCommand = new RelayCommand(
             _ => {
                 History.Undo();
                 Project.RequestRedraw();
-                StatusText = "Дію відмінено";
+                StatusText = Strings.Paint_Undo_Status;
             },
             _ => History.CanUndo
         );
+
         RedoCommand = new RelayCommand(
             _ => {
                 History.Redo();
                 Project.RequestRedraw();
-                StatusText = "Дію повернуто";
+                StatusText = Strings.Paint_Redo_Status;
             },
             _ => History.CanRedo
         );
-        SaveProjectCommand = new RelayCommand(_ => {
-            var filePath = _dialogService.SaveFileDialog("Paint Project|*.paint", defaultExt: ".paint");
 
-            if (string.IsNullOrWhiteSpace(filePath))
-            {
-                return;
-            }
+        SaveProjectCommand = new RelayCommand(_ => {
+            var filter = $"{Strings.Project_Open_FileType}|*.paint";
+            var filePath = _dialogService.SaveFileDialog(filter, defaultExt: ".paint");
+
+            if (string.IsNullOrWhiteSpace(filePath)) return;
 
             try
             {
                 string json = _projectSerializer.Serialize(Project);
-
                 _fileManager.SaveText(filePath, json);
-
-                StatusText = "Проєкт успішно збережено";
+                StatusText = Strings.Project_Save_Status;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                StatusText = $"Помилка збереження: {ex.Message}";
+                StatusText = Strings.Project_SaveFailed_Status;
             }
         });
+
         LoadProjectCommand = new RelayCommand(_ =>
         {
-            var filePath = _dialogService.OpenFileDialog("Paint Project|*.paint");
+            var filter = $"{Strings.Project_Open_FileType}|*.paint";
+            var filePath = _dialogService.OpenFileDialog(filter);
 
-            if (string.IsNullOrWhiteSpace(filePath))
-            {
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(filePath)) return;
 
             try
             {
                 string json = _fileManager.LoadText(filePath);
-
                 var loadedProject = _projectSerializer.Deserialize(json);
 
                 History = new HistoryManager();
@@ -209,13 +242,14 @@ public class MainViewModel : BaseViewModel
                 LayersContext = new LayersViewModel(Project, History, _dialogService);
 
                 OnPropertyChanged(nameof(LayersContext));
-                StatusText = $"Проєкт завантажено: {Path.GetFileName(filePath)}";
+                StatusText = $"{Strings.Project_Load_Status}: {Path.GetFileName(filePath)}";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                StatusText = $"Помилка завантаження: {ex.Message}";
+                StatusText = Strings.Project_LoadFailed_Status;
             }
         });
+
         OpenColorPickerCommand = new RelayCommand(parameter =>
         {
             string type = parameter as string ?? "Stroke";
@@ -240,15 +274,12 @@ public class MainViewModel : BaseViewModel
                 OnPropertyChanged(nameof(Settings));
             }
         });
-
-        History.HistoryChanged += () => {
-            CommandManager.InvalidateRequerySuggested();
-        };
     }
 
     private void ExportImage(object? parameter)
     {
-        var filePath = _dialogService.SaveFileDialog("PNG Image|*.png", "Unnamed.png");
+        var filePath = _dialogService.SaveFileDialog($"{Strings.Project_ExportAsImage_FileType}|*.png", 
+            $"{Strings.Project_ExportAsImage_FileName}.png");
         if (string.IsNullOrEmpty(filePath)) return;
 
         try
@@ -257,11 +288,11 @@ public class MainViewModel : BaseViewModel
 
             _fileManager.Save(filePath, imageData);
 
-            StatusText = "Експорт завершено успішно";
+            StatusText = Strings.Project_ExportAsImage_Status;
         }
         catch (Exception ex)
         {
-            StatusText = $"Помилка експорту: {ex.Message}";
+            StatusText = $"{Strings.Project_ExportAsImageFailed_Status}: {ex.Message}";
         }
     }
 }

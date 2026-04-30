@@ -39,11 +39,6 @@ public class Polyline : Shape
         visitor.Visit(this);
     }
 
-    public override bool IsHit(Point point)
-    {
-        throw new NotImplementedException();
-    }
-
     public override void Move(double dx, double dy)
     {
         for (int i = 0; i < Points.Count; i++)

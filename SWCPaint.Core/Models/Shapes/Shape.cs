@@ -19,6 +19,4 @@ public abstract class Shape : LayerElement
     }
 
     public abstract void Draw(IDrawingContext context);
-
-    public abstract bool IsHit(Point point);
 }
