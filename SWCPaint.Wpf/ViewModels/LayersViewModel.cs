@@ -4,6 +4,7 @@ using SWCPaint.Core.Commands;
 using SWCPaint.Core.Interfaces;
 using SWCPaint.Core.Models;
 using SWCPaint.Wpf.Commands;
+using SWCPaint.Wpf.Resources;
 
 namespace SWCPaint.Wpf.ViewModels;
 
@@ -77,7 +78,7 @@ public class LayersViewModel : BaseViewModel
 
     private void AddLayer()
     {
-        string name = $"Шар {Layers.Count + 1}";
+        string name = $"{Strings.Layer_Name} {Layers.Count + 1}";
         var command = new AddLayerCommand(_project, name);
 
         _history.Execute(command);
@@ -101,6 +102,9 @@ public class LayersViewModel : BaseViewModel
         if (SelectedLayer == null) return false;
 
         int modelIndex = _project.Layers.ToList().FindIndex(l => l.Id == SelectedLayer.Id);
+
+        if (modelIndex == -1) return false;
+
         int modelDirection = -uiDirection;
         int newModelIndex = modelIndex + modelDirection;
 
@@ -111,7 +115,9 @@ public class LayersViewModel : BaseViewModel
     {
         if (SelectedLayer == null) return;
 
-        int modelIndex = _project.Layers.ToList().FindIndex(l => l.Id == SelectedLayer.Id);
+        var layersList = _project.Layers.ToList();
+        int modelIndex = layersList.FindIndex(l => l.Id == SelectedLayer.Id);
+        if (modelIndex == -1) return;
 
         int modelDirection = -uiDirection;
         int newModelIndex = modelIndex + modelDirection;
@@ -119,7 +125,9 @@ public class LayersViewModel : BaseViewModel
         if (newModelIndex >= 0 && newModelIndex < _project.Layers.Count)
         {
             var command = new MoveLayerCommand(_project, SelectedLayer.Id, newModelIndex);
+
             _history.Execute(command);
+            OnPropertyChanged(nameof(SelectedLayer));
         }
     }
 
@@ -129,7 +137,7 @@ public class LayersViewModel : BaseViewModel
 
         if (target == null) return;
 
-        var newName = _dialogService.ShowInputBox("Перейменування", "Введіть нову назву шару:", target.Name);
+        var newName = _dialogService.ShowInputBox(Strings.Layer_Rename_Title, Strings.Layer_Rename_Prompt, target.Name);
 
         if (!string.IsNullOrWhiteSpace(newName) && newName != target.Name)
         {

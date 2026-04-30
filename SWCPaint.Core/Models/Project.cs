@@ -5,6 +5,8 @@ namespace SWCPaint.Core.Models;
 
 public class Project
 {
+    public const double MIN_DIMENSION = 1.0;
+    public const double MAX_DIMENSION = 10000.0;
     private double _width;
     private double _height;
     private readonly List<Layer> _layers = [];
@@ -12,31 +14,21 @@ public class Project
 
     public double Width
     {
-        get
-        {
-            return _width;
-        }
+        get => _width;
         set
         {
-            if (value < 0)
-            {
-                throw new ArgumentException("Cannot set canvas width lesser than 1 px wide");
-            }
+            if (value < MIN_DIMENSION || value > MAX_DIMENSION)
+                throw new ArgumentOutOfRangeException(nameof(Width), $"Width must be between {MIN_DIMENSION} and {MAX_DIMENSION} px.");
             _width = value;
         }
     }
     public double Height
     {
-        get
-        {
-            return _height;
-        }
+        get => _height;
         set
         {
-            if (value < 0)
-            {
-                throw new ArgumentException("Cannot set canvas height lesser than 1 px wide");
-            }
+            if (value < MIN_DIMENSION || value > MAX_DIMENSION)
+                throw new ArgumentOutOfRangeException(nameof(Height), $"Height must be between {MIN_DIMENSION} and {MAX_DIMENSION} px.");
             _height = value;
         }
     }
@@ -80,20 +72,17 @@ public class Project
 
             context.BeginLayer();
 
-            for (int i = 0; i < layer.Elements.Count; i++)
-            {
-                var element = layer.Elements[i];
+            var layerErasers = layer.Elements.OfType<EraserPath>().ToList();
 
+            foreach (var element in layer.Elements)
+            {
                 if (element is Shape shape)
                 {
-                    var futureErasers = layer.Elements
-                        .Skip(i + 1)
-                        .OfType<EraserPath>()
-                        .ToList();
+                    var relevantErasers = layerErasers.Where(e => layer.Elements.IndexOf(e) > layer.Elements.IndexOf(element)).ToList();
 
-                    if (futureErasers.Any())
+                    if (relevantErasers.Any())
                     {
-                        context.PushMask(futureErasers);
+                        context.PushMask(relevantErasers);
                         shape.Draw(context);
                         context.PopMask();
                     }

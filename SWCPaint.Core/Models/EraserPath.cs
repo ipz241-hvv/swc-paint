@@ -15,6 +15,13 @@ public class EraserPath : LayerElement
 
     public void AddPoint(Point point)
     {
+        if (_points.Count > 0)
+        {
+            var last = _points[^1];
+
+            if (Math.Sqrt(Math.Pow(point.X - last.X, 2) + Math.Pow(point.Y - last.Y, 2)) < 2)
+                return;
+        }
         _points.Add(point);
     }
 
