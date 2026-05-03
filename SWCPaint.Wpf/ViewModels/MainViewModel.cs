@@ -102,7 +102,7 @@ public class MainViewModel : BaseViewModel
         _imageExporter = imageExporter;
         CloseAction = closeAction;
 
-        _toolRegistry = new ToolRegistry(Settings);
+        _toolRegistry = new ToolRegistry();
         _history = new HistoryManager();
         _project = new Project(800, 600, Strings.Layer_NewProject_Background);
         LayersContext = new LayersViewModel(Project, History, _dialogService);
