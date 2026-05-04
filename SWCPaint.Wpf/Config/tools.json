@@ -1,0 +1,32 @@
+[
+    {
+        "Name": "Pencil",
+        "LocalizationKey": "Tool_Pencil_Name",
+        "IconPath": "/Assets/Icons/Tools/pencil.png"
+    },
+    {
+        "Name": "Brush",
+        "LocalizationKey": "Tool_Brush_Name",
+        "IconPath": "/Assets/Icons/Tools/brush.png"
+    },
+    {
+        "Name": "Rectangle",
+        "LocalizationKey": "Tool_Rectangle_Name",
+        "IconPath": "/Assets/Icons/Tools/rectangle.png"
+    },
+    {
+        "Name": "Ellipse",
+        "LocalizationKey": "Tool_Ellipse_Name",
+        "IconPath": "/Assets/Icons/Tools/ellipse.png"
+    },
+    {
+        "Name": "Eraser",
+        "LocalizationKey": "Tool_Eraser_Name",
+        "IconPath": "/Assets/Icons/Tools/eraser.png"
+    },
+    {
+        "Name": "Line",
+        "LocalizationKey": "Tool_Line_Name",
+        "IconPath": "/Assets/Icons/Tools/line.png"
+    }
+]

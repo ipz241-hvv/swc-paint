@@ -4,7 +4,8 @@
         xmlns:views="clr-namespace:SWCPaint.Wpf.Views"
         xmlns:vm="clr-namespace:SWCPaint.Wpf.ViewModels"
         xmlns:conv="clr-namespace:SWCPaint.Wpf.Converters"
-        Title="Paint" Height="720" Width="1280" Icon="/Assets/Icons/paint-icon.png">
+        xmlns:res="clr-namespace:SWCPaint.Wpf.Resources"
+        Title="{x:Static res:Strings.Paint_Window_Title}" Height="720" Width="1280" Icon="/Assets/Icons/paint-icon.png">
 
     <Window.InputBindings>
         <KeyBinding Key="P" Command="{Binding SelectToolCommand}" CommandParameter="Pencil" />
@@ -22,19 +23,19 @@
     
     <DockPanel>
         <Menu DockPanel.Dock="Top">
-            <MenuItem Header="Файл">
-                <MenuItem Header="Новий проєкт..." Command="{Binding NewProjectCommand}"/>
-                <MenuItem Header="Зберегти проєкт..." Command="{Binding SaveProjectCommand}"/>
-                <MenuItem Header="Завантажити існуючий проєкт..." Command="{Binding LoadProjectCommand}"/>
-                <MenuItem Header="Експортувати як зображення..." 
+            <MenuItem Header="{x:Static res:Strings.Menu_File_Action}">
+                <MenuItem Header="{x:Static res:Strings.Menu_NewProject_Action}" Command="{Binding NewProjectCommand}"/>
+                <MenuItem Header="{x:Static res:Strings.Menu_SaveProject_Action}" Command="{Binding SaveProjectCommand}"/>
+                <MenuItem Header="{x:Static res:Strings.Menu_LoadProject_Action}" Command="{Binding LoadProjectCommand}"/>
+                <MenuItem Header="{x:Static res:Strings.Menu_ExportAsImage_Action}" 
                   Command="{Binding ExportImageCommand}" 
                   CommandParameter="{Binding ElementName=MainDrawingCanvas}"/>
                 <Separator />
-                <MenuItem Header="Вихід" Click="Exit_Click"/>
+                <MenuItem Header="{x:Static res:Strings.Menu_Exit_Action}" Command="{Binding ExitCommand}"/>
             </MenuItem>
-            <MenuItem Header="Правка">
-                <MenuItem Header="Відмінити" Command="{Binding UndoCommand}"/>
-                <MenuItem Header="Повторити" Command="{Binding RedoCommand}"/>
+            <MenuItem Header="{x:Static res:Strings.Menu_Edit_Action}">
+                <MenuItem Header="{x:Static res:Strings.Menu_Undo_Action}" Command="{Binding UndoCommand}"/>
+                <MenuItem Header="{x:Static res:Strings.Menu_Redo_Action}" Command="{Binding RedoCommand}"/>
             </MenuItem>
         </Menu>
 

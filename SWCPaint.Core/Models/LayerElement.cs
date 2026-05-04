@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using SWCPaint.Core.Interfaces;
-using SWCPaint.Core.Models.Shapes;
+﻿using SWCPaint.Core.Interfaces;
 
 namespace SWCPaint.Core.Models;
 

@@ -1,4 +1,6 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
+using SWCPaint.Wpf.ViewModels;
 
 namespace SWCPaint.Wpf.Views.Dialogs;
 
@@ -14,6 +16,9 @@ public partial class NewProjectWindow : Window
 
     private void Accept_Click(object sender, RoutedEventArgs e)
     {
-        DialogResult = true;
+        if (DataContext is NewProjectViewModel vm && vm.IsValid)
+        {
+            DialogResult = true;
+        }
     }
 }

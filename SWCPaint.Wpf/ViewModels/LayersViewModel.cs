@@ -7,6 +7,7 @@ using SWCPaint.Core.Commands;
 using SWCPaint.Core.Interfaces;
 using SWCPaint.Core.Models;
 using SWCPaint.Wpf.Commands;
+using SWCPaint.Wpf.Resources;
 
 namespace SWCPaint.Wpf.ViewModels;
 
@@ -104,8 +105,10 @@ public class LayersViewModel : BaseViewModel, IDisposable
 
     private void AddLayer()
     {
-        string name = $"Шар {Layers.Count + 1}";
-        _history.Execute(new AddLayerCommand(_project, name));
+        string name = $"{Strings.Layer_Name} {Layers.Count + 1}";
+        var command = new AddLayerCommand(_project, name);
+
+        _history.Execute(command);
     }
 
     private void RemoveLayer(object? parameter)
@@ -148,7 +151,7 @@ public class LayersViewModel : BaseViewModel, IDisposable
         var target = (parameter as LayerViewModel) ?? SelectedLayer;
         if (target == null) return;
 
-        var newName = _dialogService.ShowInputBox("Редагування", "Введіть нову назву:", target.Name);
+        var newName = _dialogService.ShowInputBox(Strings.Layer_Rename_Title, Strings.Layer_Rename_Prompt, target.Name);
 
         if (!string.IsNullOrWhiteSpace(newName) && newName != target.Name)
         {

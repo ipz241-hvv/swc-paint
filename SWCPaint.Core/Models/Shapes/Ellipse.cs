@@ -20,12 +20,4 @@ public class Ellipse : BoxBoundedShape, IFillable
     {
         visitor.Visit(this);
     }
-
-    public override bool IsHit(Point point)
-    {
-        double dx = point.X - Center.X;
-        double dy = point.Y - Center.Y;
-
-        return (dx * dx) / (RadiusX * RadiusX) + (dy * dy) / (RadiusY * RadiusY) <= 1.0;
-    }
 }

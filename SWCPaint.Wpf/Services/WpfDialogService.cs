@@ -1,4 +1,5 @@
-﻿using System.Windows;
+using System;
+using System.Windows;
 using Microsoft.Win32;
 using SWCPaint.Core.Interfaces;
 using SWCPaint.Core.Models;
@@ -7,24 +8,23 @@ using SWCPaint.Wpf.Views.Dialogs;
 
 namespace SWCPaint.Wpf.Services;
 
+
 public class WpfDialogService : IDialogService
 {
+   
     public string? ShowInputBox(string title, string message, string defaultValue = "")
     {
-        string result = Microsoft.VisualBasic.Interaction.InputBox(message, title, defaultValue);
-        return string.IsNullOrEmpty(result) ? null : result;
+     
+        var result = Microsoft.VisualBasic.Interaction.InputBox(message, title, defaultValue);
+        
+        return string.IsNullOrWhiteSpace(result) ? null : result.Trim();
     }
 
     public (int width, int height, Color bgColor)? ShowNewProjectDialog()
     {
         var vm = new NewProjectViewModel(this);
-        var win = new NewProjectWindow { DataContext = vm, Owner = Application.Current.MainWindow };
-
-        if (win.ShowDialog() == true)
-        {
-            return (vm.Width, vm.Height, vm.BackgroundColor);
-        }
-        return null;
+        return ShowDialog<NewProjectWindow, (int, int, Color)>(vm, () => 
+            (vm.Width, vm.Height, vm.BackgroundColor));
     }
 
     public string? SaveFileDialog(string filter, string defaultFileName = "New Project", string defaultExt = ".png")
@@ -33,49 +33,47 @@ public class WpfDialogService : IDialogService
         {
             Filter = filter,
             FileName = defaultFileName,
-            DefaultExt = defaultExt
+            DefaultExt = defaultExt,
+            Title = "Зберегти файл"
         };
 
-        if (dialog.ShowDialog() == true)
-        {
-            return dialog.FileName;
-        }
-
-        return null;
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
-    public string OpenFileDialog(string filter)
+    public string? OpenFileDialog(string filter) 
     {
         var dialog = new OpenFileDialog
         {
             Filter = filter,
             Multiselect = false,
             CheckFileExists = true,
-            CheckPathExists = true
+            CheckPathExists = true,
+            Title = "Відкрити файл"
         };
 
-        if (dialog.ShowDialog() == true)
-        {
-            return dialog.FileName;
-        }
-
-        return null!;
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
     public Color? ShowColorPickerDialog(Color initialColor)
     {
         var vm = new ColorPickerViewModel(initialColor);
-        var win = new ColorPickerWindow
+        return ShowDialog<ColorPickerWindow, Color>(vm, () => vm.SelectedColor);
+    }
+
+    
+    private TResult? ShowDialog<TWindow, TResult>(object viewModel, Func<TResult> getResult) where TWindow : Window, new()
+    {
+        var win = new TWindow
         {
-            DataContext = vm,
-            Owner = Application.Current.MainWindow
+            DataContext = viewModel,
+            Owner = Application.Current?.MainWindow,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
         };
 
         if (win.ShowDialog() == true)
         {
-            return vm.SelectedColor;
+            return getResult();
         }
-
-        return null;
+        return default;
     }
 }

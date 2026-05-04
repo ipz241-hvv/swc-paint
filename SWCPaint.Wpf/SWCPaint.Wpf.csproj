@@ -20,6 +20,7 @@
     <None Remove="Assets\Icons\Tools\line.png" />
     <None Remove="Assets\Icons\Tools\rectangle.png" />
     <None Remove="Assets\Icons\undo.png" />
+    <None Remove="Config\tools.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -59,11 +60,30 @@
     <Resource Include="Assets\Icons\undo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+    <Content Include="Config\tools.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SWCPaint.Core\SWCPaint.Core.csproj" />
     <ProjectReference Include="..\SWCPaint.Infrastructure\SWCPaint.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources\Strings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Strings.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Strings.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

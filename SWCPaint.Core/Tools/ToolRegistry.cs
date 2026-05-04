@@ -1,14 +1,18 @@
-﻿using SWCPaint.Core.Interfaces.Tools;
+using SWCPaint.Core.Interfaces.Tools;
 using SWCPaint.Core.Models.Shapes;
-using SWCPaint.Core.Services;
 using SWCPaint.Core.Tools;
 
-public class ToolRegistry
+public class ToolRegistry : IToolRegistry
 {
     private readonly Dictionary<Type, ITool> _tools = new();
     private readonly Dictionary<string, ITool> _toolsByName = new();
 
-    public ToolRegistry(DrawingSettings settings)
+    public ToolRegistry()
+    {
+        RegisterDefaultTools();
+    }
+
+    private void RegisterDefaultTools()
     {
         Register(new PencilTool(1, 10));
         Register(new BrushTool(1, 50));
@@ -23,22 +27,31 @@ public class ToolRegistry
         var type = tool.GetType();
         _tools[type] = tool;
 
-        string name = type.IsGenericType
-            ? type.GetGenericArguments()[0].Name
-            : type.Name.Replace("Tool", "");
-
+        string name = GetToolName(type);
         _toolsByName[name] = tool;
+    }
+
+    private static string GetToolName(Type type)
+    {
+        if (type.IsGenericType)
+        {
+            return type.GetGenericArguments()[0].Name;
+        }
+
+        return type.Name.Replace("Tool", "");
     }
 
     public T GetTool<T>() where T : class, ITool
     {
         var type = typeof(T);
+
         if (_tools.TryGetValue(type, out var tool))
         {
             return (T)tool;
         }
 
-        throw new KeyNotFoundException($"Tool of type {type.Name} is not registered in the system.");
+        throw new KeyNotFoundException(
+            $"Tool of type {type.Name} is not registered in the system.");
     }
 
     public ITool GetTool(string name)
@@ -49,8 +62,17 @@ public class ToolRegistry
         }
 
         var registeredNames = string.Join(", ", _toolsByName.Keys);
-        throw new KeyNotFoundException($"Інструмент '{name}' не знайдено. Доступні інструменти: {registeredNames}");
+        throw new KeyNotFoundException(
+            $"Інструмент '{name}' не знайдено. Доступні інструменти: {registeredNames}");
     }
 
-    public IEnumerable<string> GetRegisteredToolNames() => _toolsByName.Keys;
+    public IEnumerable<ITool> GetAllTools()
+    {
+        return _toolsByName.Values;
+    }
+
+    public IEnumerable<string> GetRegisteredToolNames()
+    {
+        return _toolsByName.Keys;
+    }
 }
