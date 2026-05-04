@@ -1,4 +1,5 @@
-﻿using SWCPaint.Core.Commands;
+using System;
+using SWCPaint.Core.Commands;
 using SWCPaint.Core.Interfaces.Shapes;
 using SWCPaint.Core.Interfaces.Tools;
 using SWCPaint.Core.Models;
@@ -12,7 +13,6 @@ public class ShapeTool<TShape> : ITool where TShape : BoxBoundedShape
     private Point _startPoint;
 
     public LayerElement? ActiveElement => _currentShape;
-
     public double MinThickness { get; }
     public double MaxThickness { get; }
 
@@ -25,47 +25,74 @@ public class ShapeTool<TShape> : ITool where TShape : BoxBoundedShape
     public void OnMouseDown(Point point, ToolContext toolContext)
     {
         _startPoint = point;
+        _currentShape = CreateShapeInstance(point);
+        
+        if (_currentShape == null) return;
 
-        _currentShape = (TShape)Activator.CreateInstance(
-            typeof(TShape),
-            point, 0.0, 0.0)!;
-
-        _currentShape.StrokeColor = toolContext.Settings.StrokeColor;
-        _currentShape.Thickness = toolContext.Settings.Thickness;
-
-        if (_currentShape is IFillable fillable)
-        {
-            fillable.FillColor = toolContext.Settings.FillColor;
-        }
+        ApplySettings(_currentShape, toolContext.Settings);
     }
 
     public void OnMouseMove(Point point, ToolContext toolContext)
     {
         if (_currentShape == null) return;
 
-        double newX = Math.Min(_startPoint.X, point.X);
-        double newY = Math.Min(_startPoint.Y, point.Y);
-        double newWidth = Math.Abs(point.X - _startPoint.X);
-        double newHeight = Math.Abs(point.Y - _startPoint.Y);
-
-        double dx = newX - _currentShape.Position.X;
-        double dy = newY - _currentShape.Position.Y;
-
-        _currentShape.Move(dx, dy);
-        _currentShape.Width = newWidth;
-        _currentShape.Height = newHeight;
+        UpdateShapeBounds(point);
     }
 
     public void OnMouseUp(Point point, ToolContext toolContext)
     {
-        if (_currentShape != null && (_currentShape.Width > 1 || _currentShape.Height > 1))
+        if (_currentShape == null) return;
+
+        var currentLayer = toolContext.Project.CurrentLayer;
+        
+        if (currentLayer != null && IsValidSize(_currentShape))
         {
-            var command = new AddElementCommand(
-                toolContext.Project.CurrentLayer,
-                _currentShape
-            );
+            var command = new AddElementCommand(currentLayer, _currentShape);
             toolContext.History.Execute(command);
         }
+
         _currentShape = null;
     }
+
+    private TShape? CreateShapeInstance(Point point)
+    {
+        try 
+        {
+            return (TShape)Activator.CreateInstance(typeof(TShape), point, 0.0, 0.0)!;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    private void ApplySettings(TShape shape, ToolSettings settings)
+    {
+        shape.StrokeColor = settings.StrokeColor;
+        shape.Thickness = settings.Thickness;
+
+        if (shape is IFillable fillable)
+        {
+            fillable.FillColor = settings.FillColor;
+        }
+    }
+
+    private void UpdateShapeBounds(Point currentPoint)
+    {
+        if (_currentShape == null) return;
+
+        double left = Math.Min(_startPoint.X, currentPoint.X);
+        double top = Math.Min(_startPoint.Y, currentPoint.Y);
+        double width = Math.Abs(currentPoint.X - _startPoint.X);
+        double height = Math.Abs(currentPoint.Y - _startPoint.Y);
+
+        double dx = left - _currentShape.Position.X;
+        double dy = top - _currentShape.Position.Y;
+
+        _currentShape.Move(dx, dy);
+        _currentShape.Width = width;
+        _currentShape.Height = height;
+    }
+
+    private bool IsValidSize(TShape shape) => shape.Width > 1 || shape.Height > 1;
 }

@@ -24,7 +24,7 @@ public class RenameLayerCommand : IUndoableCommand
 
     public void Execute()
     {
-        
+       
         if (_layer.Name == _newName) return;
 
         _layer.Name = _newName;
@@ -33,7 +33,7 @@ public class RenameLayerCommand : IUndoableCommand
 
     public void Undo()
     {
-  
+       
         if (_layer.Name == _oldName) return;
 
         _layer.Name = _oldName;

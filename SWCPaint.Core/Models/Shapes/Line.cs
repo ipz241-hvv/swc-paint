@@ -36,16 +36,6 @@ public class Line : Shape
         visitor.Visit(this);
     }
 
-    public override bool IsHit(Point point)
-    {
-        double minX = Math.Min(Start.X, End.X) - 5;
-        double maxX = Math.Max(Start.X, End.X) + 5;
-        double minY = Math.Min(Start.Y, End.Y) - 5;
-        double maxY = Math.Max(Start.Y, End.Y) + 5;
-
-        return point.X >= minX && point.X <= maxX && point.Y >= minY && point.Y <= maxY;
-    }
-
     public override void Move(double dx, double dy)
     {
         Start = new Point(Start.X + dx, Start.Y + dy);

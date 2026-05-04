@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using SWCPaint.Core.Dtos;
-using SWCPaint.Core.Dtos.Shapes;
 using SWCPaint.Core.Models;
 using SWCPaint.Core.Models.Shapes;
+using SWCPaint.Core.Dtos.Shapes;
 
 namespace SWCPaint.Core.Factories;
 

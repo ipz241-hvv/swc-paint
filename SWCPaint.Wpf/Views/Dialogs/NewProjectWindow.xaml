@@ -1,31 +1,84 @@
 ﻿<Window x:Class="SWCPaint.Wpf.Views.Dialogs.NewProjectWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Новий проєкт" SizeToContent="WidthAndHeight" 
+        xmlns:res="clr-namespace:SWCPaint.Wpf.Resources"
+        Title="{x:Static res:Strings.Project_New_Title}" SizeToContent="WidthAndHeight" 
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Icon="/Assets/Icons/paint-icon.png">
 
+    <Window.Resources>
+        <Style TargetType="TextBox">
+            <Setter Property="Validation.ErrorTemplate">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <DockPanel>
+                            <Border BorderBrush="Red" BorderThickness="1">
+                                <AdornedElementPlaceholder x:Name="controlWithError"/>
+                            </Border>
+                            <TextBlock Foreground="Red" FontWeight="Bold" Margin="5,0,0,0" Text="!" 
+                                   ToolTip="{Binding ElementName=controlWithError, Path=AdornedElement.(Validation.Errors)[0].ErrorContent}"/>
+                        </DockPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="true">
+                    <Setter Property="ToolTip" 
+                        Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    
     <StackPanel Width="250" Margin="15">
-        <TextBlock Text="Ширина (px):" Margin="0,0,0,5"/>
-        <TextBox Text="{Binding Width, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,15"/>
+        <TextBlock Margin="0,0,0,5">
+            <TextBlock.Text>
+                <Binding Source="{x:Static res:Strings.Project_Width_Label}" StringFormat="{}{0} (px):" />
+            </TextBlock.Text>
+        </TextBlock>
+        <TextBox x:Name="WidthTextBox" Text="{Binding Width, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Margin="0,0,0,15"/>
 
-        <TextBlock Text="Висота (px):" Margin="0,0,0,5"/>
-        <TextBox Text="{Binding Height, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,15"/>
+        <TextBlock Margin="0,0,0,5">
+            <TextBlock.Text>
+                <Binding Source="{x:Static res:Strings.Project_Height_Label}" StringFormat="{}{0} (px):" />
+            </TextBlock.Text>
+        </TextBlock>
+        <TextBox x:Name="HeightTextBox" Text="{Binding Height, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" Margin="0,0,0,15"/>
 
-        <TextBlock Text="Колір фону:" Margin="0,0,0,5"/>
+        <TextBlock Margin="0,0,0,5">
+            <TextBlock.Text>
+                <Binding Source="{x:Static res:Strings.Project_BackgroundColor_Label}" StringFormat="{}{0}:" />
+            </TextBlock.Text>
+        </TextBlock>
 
         <Button Command="{Binding ChangeColorCommand}" Height="30" Margin="0,0,0,20">
             <StackPanel Orientation="Horizontal">
                 <Border Width="16" Height="16" BorderBrush="Black" BorderThickness="1">
                     <Rectangle Fill="{Binding BackgroundColor, Converter={StaticResource CoreColorToWpfBrushConverter}}"/>
                 </Border>
-                <TextBlock Text=" Обрати колір..." VerticalAlignment="Center" Margin="5,0,0,0"/>
+                <TextBlock Text="{x:Static res:Strings.Project_BackgroundColor_Button}" VerticalAlignment="Center" Margin="5,0,0,0"/>
             </StackPanel>
         </Button>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Створити" IsDefault="True" Width="80" Click="Accept_Click" Margin="0,0,10,0"/>
-            <Button Content="Скасувати" IsCancel="True" Width="80"/>
+            <Button Content="{x:Static res:Strings.Project_Create_Button}" 
+        IsDefault="True" Width="80" Click="Accept_Click" Margin="0,0,10,0">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="IsEnabled" Value="False"/>
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding ElementName=WidthTextBox, Path=(Validation.HasError)}" Value="False"/>
+                                    <Condition Binding="{Binding ElementName=HeightTextBox, Path=(Validation.HasError)}" Value="False"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="IsEnabled" Value="True"/>
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button Content="{x:Static res:Strings.Project_Cancel_Button}" IsCancel="True" Width="80"/>
         </StackPanel>
     </StackPanel>
 </Window>
