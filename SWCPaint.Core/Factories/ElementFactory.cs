@@ -3,29 +3,29 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using SWCPaint.Core.Dtos;
+using SWCPaint.Core.Dtos.Shapes;
+using SWCPaint.Core.Interfaces.Shapes;
 using SWCPaint.Core.Models;
 using SWCPaint.Core.Models.Shapes;
-using SWCPaint.Core.Dtos.Shapes;
 
 namespace SWCPaint.Core.Factories;
 
 public class ElementFactory
 {
     private readonly JsonSerializerOptions _options;
-    
     private readonly Dictionary<string, Func<JsonElement, LayerElement>> _creationStrategies;
 
     public ElementFactory(JsonSerializerOptions options)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
-        
+
         _creationStrategies = new Dictionary<string, Func<JsonElement, LayerElement>>
         {
             { "Rectangle", CreateRectangle },
-            { "Ellipse", CreateEllipse },
-            { "Line", CreateLine },
-            { "Polyline", CreatePolyline },
-            { "Eraser", CreateEraser }
+            { "Ellipse",   CreateEllipse   },
+            { "Line",      CreateLine      },
+            { "Polyline",  CreatePolyline  },
+            { "Eraser",    CreateEraser    }
         };
     }
 
@@ -38,19 +38,13 @@ public class ElementFactory
 
         if (_creationStrategies.TryGetValue(type, out var strategy))
         {
-            try 
-            {
-                return strategy(json);
-            }
-            catch (JsonException)
-            {
-               
-                return null;
-            }
+            try { return strategy(json); }
+            catch (JsonException) { return null; }
         }
 
         return null;
     }
+
 
     private Rectangle CreateRectangle(JsonElement json)
     {
@@ -71,8 +65,10 @@ public class ElementFactory
     private Line CreateLine(JsonElement json)
     {
         var dto = DeserializeDto<LineDto>(json);
-        var line = new Line(new Point(dto.Start.X, dto.Start.Y), new Point(dto.End.X, dto.End.Y));
-        line.StrokeColor = FromColorDto(dto.StrokeColor);
+        var line = new Line(
+            new Point(dto.Start.X, dto.Start.Y),
+            new Point(dto.End.X, dto.End.Y));
+        line.StrokeColor = MapColor(dto.StrokeColor);
         line.Thickness = dto.Thickness;
         return line;
     }
@@ -80,11 +76,10 @@ public class ElementFactory
     private Polyline CreatePolyline(JsonElement json)
     {
         var dto = DeserializeDto<PolylineDto>(json);
-        var points = dto.Points.Select(p => new Point(p.X, p.Y)).ToList();
-        var polyline = new Polyline(points);
-        polyline.StrokeColor = FromColorDto(dto.StrokeColor);
+        var polyline = new Polyline(MapPoints(dto.Points));
+        polyline.StrokeColor = MapColor(dto.StrokeColor);
         polyline.Thickness = dto.Thickness;
-        polyline.IsSmooth = dto.IsSmooth;
+        polyline.IsSmooth = dto.IsSmooth;  
         return polyline;
     }
 
@@ -92,25 +87,29 @@ public class ElementFactory
     {
         var dto = DeserializeDto<EraserPathDto>(json);
         var eraser = new EraserPath(dto.Thickness);
-        foreach (var p in dto.Points) eraser.AddPoint(new Point(p.X, p.Y));
+        foreach (var p in MapPoints(dto.Points))  
+            eraser.AddPoint(p);
         return eraser;
     }
 
+    private static List<Point> MapPoints(IEnumerable<PointDto> dtos)
+        => dtos.Select(p => new Point(p.X, p.Y)).ToList();
 
-    private T DeserializeDto<T>(JsonElement json) => 
-        json.Deserialize<T>(_options) ?? throw new JsonException($"Failed to deserialize {typeof(T).Name}");
+    private static Color MapColor(ColorDto dto)
+        => new Color(dto.Red, dto.Green, dto.Blue, dto.Alpha);
+
+    private T DeserializeDto<T>(JsonElement json)
+        => json.Deserialize<T>(_options)
+           ?? throw new JsonException($"Failed to deserialize {typeof(T).Name}");
 
     private void ApplyCommonProperties(BoxBoundedShape shape, BoxBoundedShapeDto dto)
     {
-        shape.StrokeColor = FromColorDto(dto.StrokeColor);
+        shape.StrokeColor = MapColor(dto.StrokeColor);
         shape.Thickness = dto.Thickness;
 
         if (shape is IFillable fillable && dto is IFillableDto fillableDto)
-        {
-            fillable.FillColor = fillableDto.FillColor != null ? FromColorDto(fillableDto.FillColor) : null;
-        }
+            fillable.FillColor = fillableDto.FillColor != null
+                ? MapColor(fillableDto.FillColor)
+                : null;
     }
-
-    private Color FromColorDto(ColorDto dto) =>
-        new Color(dto.Red, dto.Green, dto.Blue, dto.Alpha);
 }
