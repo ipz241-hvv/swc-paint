@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Windows.Input;
 using SWCPaint.Core.Commands;
@@ -143,140 +143,143 @@ public class MainViewModel : BaseViewModel
                nameof(SaveProjectCommand), nameof(LoadProjectCommand), nameof(OpenColorPickerCommand))]
     private void InitializeCommands()
     {
-        SelectToolCommand = new RelayCommand(param =>
-        {
-            string toolName = (param as string) ?? "Pencil";
-
-            try
-            {
-                CurrentTool = _toolRegistry.GetTool(toolName);
-                var displayInfo = _toolInfos.FirstOrDefault(d => d.Name == toolName);
-
-                string displayName = displayInfo?.DisplayName ?? toolName;
-                StatusText = $"{Strings.Tool_Select_Status}: {displayName}";
-            }
-            catch (Exception)
-            {
-                StatusText = Strings.Tool_SelectFailed_Status;
-            }
-        });
-
-        ExitCommand = new RelayCommand(_ =>
-        {
-            CloseAction?.Invoke();
-        });
-
-        ExportImageCommand = new RelayCommand(
-            ExportImage,
-            _ => Project != null
-        );
-
-        NewProjectCommand = new RelayCommand(_ => {
-            var result = _dialogService.ShowNewProjectDialog();
-
-            if (result != null)
-            {
-                var (w, h, bgColor) = result.Value;
-
-                History = new HistoryManager();
-                Project = new Project(w, h, Strings.Layer_NewProject_Background);
-                Project.BackgroundColor = bgColor;
-
-                LayersContext = new LayersViewModel(Project, History, _dialogService);
-                OnPropertyChanged(nameof(LayersContext));
-
-                StatusText = $"{Strings.Project_New_Status} {w}x{h}";
-            }
-        });
-
-        UndoCommand = new RelayCommand(
-            _ => {
-                History.Undo();
-                Project.RequestRedraw();
-                StatusText = Strings.Paint_Undo_Status;
-            },
-            _ => History.CanUndo
-        );
-
-        RedoCommand = new RelayCommand(
-            _ => {
-                History.Redo();
-                Project.RequestRedraw();
-                StatusText = Strings.Paint_Redo_Status;
-            },
-            _ => History.CanRedo
-        );
-
-        SaveProjectCommand = new RelayCommand(_ => {
-            var filter = $"{Strings.Project_Open_FileType}|*.paint";
-            var filePath = _dialogService.SaveFileDialog(filter, defaultExt: ".paint");
-
-            if (string.IsNullOrWhiteSpace(filePath)) return;
-
-            try
-            {
-                string json = _projectSerializer.Serialize(Project);
-                _fileManager.SaveText(filePath, json);
-                StatusText = Strings.Project_Save_Status;
-            }
-            catch (Exception)
-            {
-                StatusText = Strings.Project_SaveFailed_Status;
-            }
-        });
-
-        LoadProjectCommand = new RelayCommand(_ =>
-        {
-            var filter = $"{Strings.Project_Open_FileType}|*.paint";
-            var filePath = _dialogService.OpenFileDialog(filter);
-
-            if (string.IsNullOrWhiteSpace(filePath)) return;
-
-            try
-            {
-                string json = _fileManager.LoadText(filePath);
-                var loadedProject = _projectSerializer.Deserialize(json);
-
-                History = new HistoryManager();
-                Project = loadedProject;
-                LayersContext = new LayersViewModel(Project, History, _dialogService);
-
-                OnPropertyChanged(nameof(LayersContext));
-                StatusText = $"{Strings.Project_Load_Status}: {Path.GetFileName(filePath)}";
-            }
-            catch (Exception)
-            {
-                StatusText = Strings.Project_LoadFailed_Status;
-            }
-        });
-
-        OpenColorPickerCommand = new RelayCommand(parameter =>
-        {
-            string type = parameter as string ?? "Stroke";
-
-            var currentColor = type == "Fill"
-                ? (Settings.FillColor ?? new Color(0, 0, 0, 0))
-                : Settings.StrokeColor;
-
-            var newColor = _dialogService.ShowColorPickerDialog(currentColor);
-
-            if (newColor != null)
-            {
-                if (type == "Fill")
-                {
-                    Settings.FillColor = newColor.Value;
-                }
-                else
-                {
-                    Settings.StrokeColor = newColor.Value;
-                }
-
-                OnPropertyChanged(nameof(Settings));
-            }
-        });
+        SelectToolCommand = new RelayCommand(ExecuteSelectTool);
+        ExitCommand = new RelayCommand(_ => CloseAction?.Invoke());
+        ExportImageCommand = new RelayCommand(ExecuteExportImage, _ => Project != null);
+        NewProjectCommand = new RelayCommand(_ => ExecuteNewProject());
+        UndoCommand = new RelayCommand(_ => ExecuteUndo(), _ => History.CanUndo);
+        RedoCommand = new RelayCommand(_ => ExecuteRedo(), _ => History.CanRedo);
+        SaveProjectCommand = new RelayCommand(_ => ExecuteSaveProject());
+        LoadProjectCommand = new RelayCommand(_ => ExecuteLoadProject());
+        OpenColorPickerCommand = new RelayCommand(ExecuteOpenColorPicker);
     }
 
-    private void ExportImage(object? parameter)
+    private void ExecuteSelectTool(object? param)
+    {
+        string toolName = (param as string) ?? "Pencil";
+
+        try
+        {
+            CurrentTool = _toolRegistry.GetTool(toolName);
+            var displayInfo = _toolInfos.FirstOrDefault(d => d.Name == toolName);
+
+            string displayName = displayInfo?.DisplayName ?? toolName;
+            StatusText = $"{Strings.Tool_Select_Status}: {displayName}";
+        }
+        catch (Exception)
+        {
+            StatusText = Strings.Tool_SelectFailed_Status;
+        }
+    }
+
+    private void ExecuteNewProject()
+    {
+        var result = _dialogService.ShowNewProjectDialog();
+
+        if (result != null)
+        {
+            var (w, h, bgColor) = result.Value;
+
+            History = new HistoryManager();
+            Project = new Project(w, h, Strings.Layer_NewProject_Background);
+            Project.BackgroundColor = bgColor;
+
+            LayersContext?.Dispose();
+            LayersContext = new LayersViewModel(Project, History, _dialogService);
+            OnPropertyChanged(nameof(LayersContext));
+
+            StatusText = $"{Strings.Project_New_Status} {w}x{h}";
+        }
+    }
+
+    private void ExecuteUndo()
+    {
+        History.Undo();
+        Project.RequestRedraw();
+        StatusText = Strings.Paint_Undo_Status;
+    }
+
+    private void ExecuteRedo()
+    {
+        History.Redo();
+        Project.RequestRedraw();
+        StatusText = Strings.Paint_Redo_Status;
+    }
+
+    private void ExecuteSaveProject()
+    {
+        var filter = $"{Strings.Project_Open_FileType}|*.paint";
+        var filePath = _dialogService.SaveFileDialog(filter, defaultExt: ".paint");
+
+        if (string.IsNullOrWhiteSpace(filePath)) return;
+
+        try
+        {
+            string json = _projectSerializer.Serialize(Project);
+            _fileManager.SaveText(filePath, json);
+            StatusText = Strings.Project_Save_Status;
+        }
+        catch (Exception)
+        {
+            StatusText = Strings.Project_SaveFailed_Status;
+        }
+    }
+
+    private void ExecuteLoadProject()
+    {
+        var filter = $"{Strings.Project_Open_FileType}|*.paint";
+        var filePath = _dialogService.OpenFileDialog(filter);
+
+        if (string.IsNullOrWhiteSpace(filePath)) return;
+
+        try
+        {
+            string json = _fileManager.LoadText(filePath);
+            var loadedProject = _projectSerializer.Deserialize(json);
+
+            History = new HistoryManager();
+            Project = loadedProject;
+            
+            LayersContext?.Dispose();
+            LayersContext = new LayersViewModel(Project, History, _dialogService);
+
+            OnPropertyChanged(nameof(LayersContext));
+            StatusText = $"{Strings.Project_Load_Status}: {Path.GetFileName(filePath)}";
+        }
+        catch (Exception)
+        {
+            StatusText = Strings.Project_LoadFailed_Status;
+        }
+    }
+
+    private void ExecuteOpenColorPicker(object? parameter)
+    {
+        ColorType type = ColorType.Stroke;
+        if (parameter is ColorType t) type = t;
+        else if (parameter is string s && Enum.TryParse<ColorType>(s, out var parsed)) type = parsed;
+
+        var currentColor = type == ColorType.Fill
+            ? (Settings.FillColor ?? new Color(0, 0, 0, 0))
+            : Settings.StrokeColor;
+
+        var newColor = _dialogService.ShowColorPickerDialog(currentColor);
+
+        if (newColor != null)
+        {
+            if (type == ColorType.Fill)
+            {
+                Settings.FillColor = newColor.Value;
+            }
+            else
+            {
+                Settings.StrokeColor = newColor.Value;
+            }
+
+            OnPropertyChanged(nameof(Settings));
+        }
+    }
+
+    private void ExecuteExportImage(object? parameter)
     {
         var filePath = _dialogService.SaveFileDialog($"{Strings.Project_ExportAsImage_FileType}|*.png", 
             $"{Strings.Project_ExportAsImage_FileName}.png");
@@ -295,4 +298,5 @@ public class MainViewModel : BaseViewModel
             StatusText = $"{Strings.Project_ExportAsImageFailed_Status}: {ex.Message}";
         }
     }
+
 }
