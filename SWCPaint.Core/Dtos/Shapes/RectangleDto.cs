@@ -1,4 +1,4 @@
-﻿namespace SWCPaint.Core.Dtos.Shapes;
+namespace SWCPaint.Core.Dtos.Shapes;
 
 public class RectangleDto
 {

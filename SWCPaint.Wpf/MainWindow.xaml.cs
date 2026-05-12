@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using SWCPaint.Core.Interfaces;
 using SWCPaint.Core.Interfaces.Persistence;
