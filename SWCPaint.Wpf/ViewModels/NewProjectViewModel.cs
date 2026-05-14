@@ -17,17 +17,17 @@ public class NewProjectViewModel : BaseViewModel, IDataErrorInfo
     public int Width
     {
         get => _width;
-        set { _width = value; OnPropertyChanged(); }
+        set => SetField(ref _width, value);
     }
     public int Height
     {
         get => _height;
-        set { _height = value; OnPropertyChanged(); }
+        set => SetField(ref _height, value);
     }
     public Color BackgroundColor
     {
         get => _backgroundColor;
-        set { _backgroundColor = value; OnPropertyChanged(); }
+        set => SetField(ref _backgroundColor, value);
     }
     public ICommand ChangeColorCommand { get; }
 
@@ -42,12 +42,17 @@ public class NewProjectViewModel : BaseViewModel, IDataErrorInfo
             switch (columnName)
             {
                 case nameof(Width):
-                    if (Width < Project.MIN_DIMENSION || Width > Project.MAX_DIMENSION)
-                        error = $"{Strings.Project_Width_Error} {Project.MIN_DIMENSION}-{Project.MAX_DIMENSION}";
+                    error = ValidateDimension(
+                        Width,
+                        Strings.Project_Width_Error
+                    );
                     break;
+
                 case nameof(Height):
-                    if (Height < Project.MIN_DIMENSION || Height > Project.MAX_DIMENSION)
-                        error = $"{Strings.Project_Height_Error} {Project.MIN_DIMENSION}-{Project.MAX_DIMENSION}";
+                    error = ValidateDimension(
+                        Height,
+                        Strings.Project_Height_Error
+                    );
                     break;
             }
 
@@ -56,6 +61,25 @@ public class NewProjectViewModel : BaseViewModel, IDataErrorInfo
     }
     public bool IsValid => string.IsNullOrEmpty(this[nameof(Width)]) &&
                           string.IsNullOrEmpty(this[nameof(Height)]);
+
+    private string? ValidateDimension(int value, string errorMessage)
+    {
+        if (value < Project.MIN_DIMENSION || value > Project.MAX_DIMENSION)
+        {
+            return $"{errorMessage} {Project.MIN_DIMENSION}-{Project.MAX_DIMENSION}";
+        }
+
+        return null;
+    }
+
+    private void SetField<T>(ref T field, T value)
+    {
+        if (!Equals(field, value))
+        {
+            field = value;
+            OnPropertyChanged();
+        }
+    }
 
     public NewProjectViewModel(IDialogService dialogService)
     {
