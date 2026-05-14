@@ -16,26 +16,10 @@ namespace SWCPaint.Wpf;
 /// </summary>
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    public MainWindow(MainViewModel viewModel)
     {
         InitializeComponent();
-
-        string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", "tools.json");
-
-        IDialogService dialogService = new WpfDialogService();
-        IFileManager fileManager = new PhysicalFileManager();
-        IProjectSerializer projectSerializer = new JsonProjectSerializer();
-        IImageExporter imageExporter = new WpfImageExporter();
-        IToolConfigurationService toolConfigurationService = new JsonToolConfigurationService(configPath, fileManager);
-
-        DataContext = new MainViewModel(
-            toolConfigurationService, 
-            dialogService, 
-            fileManager, 
-            projectSerializer, 
-            imageExporter,
-            Close
-            );
+        DataContext = viewModel;
     }
 
     public void Exit_Click(object sender, RoutedEventArgs e)
